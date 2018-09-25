@@ -260,14 +260,14 @@ class Kubernetes(object):
         self._cloudshell_model_name = value
 
 
-class MyDeploymentPath(object):
+class KubernetesService(object):
     def __init__(self, name):
         """
         
         """
         self.attributes = {}
         self.resources = {}
-        self._cloudshell_model_name = 'Kubernetes.MyDeploymentPath'
+        self._cloudshell_model_name = 'Kubernetes.Kubernetes Service'
         self._name = name
 
     def add_sub_resource(self, relative_path, sub_resource):
@@ -280,9 +280,9 @@ class MyDeploymentPath(object):
         :param context: cloudshell.shell.core.driver_context.ResourceCommandContext
         :type context: cloudshell.shell.core.driver_context.ResourceCommandContext
         :return:
-        :rtype MyDeploymentPath
+        :rtype Kubernetes Service
         """
-        result = MyDeploymentPath(name=context.resource.name)
+        result = KubernetesService(name=context.resource.name)
         for attr in context.resource.attributes:
             result.attributes[attr] = context.resource.attributes[attr]
         return result
@@ -340,14 +340,74 @@ class MyDeploymentPath(object):
         Returns the name of the Cloudshell model
         :return:
         """
-        return 'MyDeploymentPath'
+        return 'Kubernetes Service'
+
+    @property
+    def docker_image_name(self):
+        """
+        :rtype: str
+        """
+        return self.attributes['Kubernetes.Kubernetes Service.Docker Image Name'] if 'Kubernetes.Kubernetes Service.Docker Image Name' in self.attributes else None
+
+    @docker_image_name.setter
+    def docker_image_name(self, value):
+        """
+        
+        :type value: str
+        """
+        self.attributes['Kubernetes.Kubernetes Service.Docker Image Name'] = value
+
+    @property
+    def docker_image_tag(self):
+        """
+        :rtype: str
+        """
+        return self.attributes['Kubernetes.Kubernetes Service.Docker Image Tag'] if 'Kubernetes.Kubernetes Service.Docker Image Tag' in self.attributes else None
+
+    @docker_image_tag.setter
+    def docker_image_tag(self, value):
+        """
+        
+        :type value: str
+        """
+        self.attributes['Kubernetes.Kubernetes Service.Docker Image Tag'] = value
+
+    @property
+    def internal_ports(self):
+        """
+        :rtype: str
+        """
+        return self.attributes['Kubernetes.Kubernetes Service.Internal Ports'] if 'Kubernetes.Kubernetes Service.Internal Ports' in self.attributes else None
+
+    @internal_ports.setter
+    def internal_ports(self, value):
+        """
+        
+        :type value: str
+        """
+        self.attributes['Kubernetes.Kubernetes Service.Internal Ports'] = value
+
+    @property
+    def external_ports(self):
+        """
+        :rtype: str
+        """
+        return self.attributes['Kubernetes.Kubernetes Service.External Ports'] if 'Kubernetes.Kubernetes Service.External Ports' in self.attributes else None
+
+    @external_ports.setter
+    def external_ports(self, value):
+        """
+        
+        :type value: str
+        """
+        self.attributes['Kubernetes.Kubernetes Service.External Ports'] = value
 
     @property
     def autoload(self):
         """
         :rtype: bool
         """
-        return self.attributes['Kubernetes.MyDeploymentPath.Autoload'] if 'Kubernetes.MyDeploymentPath.Autoload' in self.attributes else None
+        return self.attributes['Kubernetes.Kubernetes Service.Autoload'] if 'Kubernetes.Kubernetes Service.Autoload' in self.attributes else None
 
     @autoload.setter
     def autoload(self, value=True):
@@ -355,14 +415,14 @@ class MyDeploymentPath(object):
         Whether to call the autoload command during Sandbox setup
         :type value: bool
         """
-        self.attributes['Kubernetes.MyDeploymentPath.Autoload'] = value
+        self.attributes['Kubernetes.Kubernetes Service.Autoload'] = value
 
     @property
     def wait_for_ip(self):
         """
         :rtype: bool
         """
-        return self.attributes['Kubernetes.MyDeploymentPath.Wait for IP'] if 'Kubernetes.MyDeploymentPath.Wait for IP' in self.attributes else None
+        return self.attributes['Kubernetes.Kubernetes Service.Wait for IP'] if 'Kubernetes.Kubernetes Service.Wait for IP' in self.attributes else None
 
     @wait_for_ip.setter
     def wait_for_ip(self, value=True):
@@ -370,7 +430,7 @@ class MyDeploymentPath(object):
         if set to false the deployment will not wait for the VM to get an IP address
         :type value: bool
         """
-        self.attributes['Kubernetes.MyDeploymentPath.Wait for IP'] = value
+        self.attributes['Kubernetes.Kubernetes Service.Wait for IP'] = value
 
     @property
     def name(self):

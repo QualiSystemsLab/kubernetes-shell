@@ -14,10 +14,29 @@ imports:
 
 node_types:
 
-  vendor.resource.MyDeploymentPath:
+  vendor.resource.Kubernetes Service:
     derived_from: cloudshell.nodes.CustomDeploymentOption
 
-#    ## custom attributes example for deployment option
+    properties:
+      Docker Image Name:
+        type: string
+        description:
+        tags: [user_input]
+      Docker Image Tag:
+        type: string
+        description:
+        tags: [user_input]
+      Internal Ports:
+        type: string
+        description:
+        tags: [user_input]
+      External Ports:
+        type: string
+        description:
+        tags: [user_input]
+
+
+    #    ## custom attributes example for deployment option
 #    properties:
 #        Image Id:
 #            type: string
