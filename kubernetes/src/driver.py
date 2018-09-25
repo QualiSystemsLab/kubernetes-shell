@@ -1,11 +1,16 @@
+from cloudshell.core.context.error_handling_context import ErrorHandlingContext
 from cloudshell.cp.core import DriverRequestParser
 from cloudshell.shell.core.resource_driver_interface import ResourceDriverInterface
 from cloudshell.cp.core.models import DriverResponse
 from cloudshell.shell.core.driver_context import InitCommandContext, AutoLoadCommandContext, ResourceCommandContext, \
     AutoLoadAttribute, AutoLoadDetails, CancellationContext, ResourceRemoteCommandContext
 
+from cloudshell.shell.core.session.logging_session import LoggingSessionContext
 
-#from data_model import *  # run 'shellfoundry generate' to generate data model classes
+import data_model
+from domain.operations.autoload import AutolaodOperation
+from domain.services.api_clients_provider import ApiClientsProvider
+
 
 class KubernetesDriver (ResourceDriverInterface):
 
@@ -14,6 +19,12 @@ class KubernetesDriver (ResourceDriverInterface):
         ctor must be without arguments, it is created with reflection at run time
         """
         self.request_parser = DriverRequestParser()
+
+        # services
+        self.api_clients_provider = ApiClientsProvider()
+
+        # operations
+        self.autoload_operation = AutolaodOperation(api_clients_provider=self.api_clients_provider)
 
     def initialize(self, context):
         """
@@ -32,8 +43,9 @@ class KubernetesDriver (ResourceDriverInterface):
         :return Attribute and sub-resource information for the Shell resource you can return an AutoLoadDetails object
         :rtype: AutoLoadDetails
         """
-
-        # run 'shellfoundry generate' in order to create classes that represent your data model
+        cloud_provider_resource = data_model.Kubernetes.create_from_context(context)
+        with LoggingSessionContext(context) as logger, ErrorHandlingContext(logger):
+            self.autoload_operation.validate_config(cloud_provider_resource)
 
         return AutoLoadDetails([], [])
 
