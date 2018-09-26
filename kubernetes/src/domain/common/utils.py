@@ -33,4 +33,4 @@ def convert_app_name_to_valide_kubernetes_name(app_name):
     :param str app_name:
     :rtype: str
     """
-    return app_name.lower().replace(' ', '-')
+    return app_name.lower().replace(' ', '-').replace('_', '-')

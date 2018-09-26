@@ -1,5 +1,4 @@
-from kubernetes.client import ApiClient
-from kubernetes.client import CoreV1Api
+from kubernetes.client import ApiClient, CoreV1Api
 
 
 class KubernetesClients(object):
@@ -10,5 +9,5 @@ class KubernetesClients(object):
         :param ApiClient api_client:
         :param CoreV1Api core_api:
         """
-        self.api_client = api_client
+        self._api_client = api_client
         self.core_api = core_api

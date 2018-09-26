@@ -2,7 +2,7 @@ from cloudshell.core.context.error_handling_context import ErrorHandlingContext
 from cloudshell.cp.core import DriverRequestParser
 from cloudshell.cp.core.utils import single
 from cloudshell.shell.core.resource_driver_interface import ResourceDriverInterface
-from cloudshell.cp.core.models import DriverResponse, DeployApp
+from cloudshell.cp.core.models import DriverResponse, DeployApp, CleanupNetwork
 from cloudshell.shell.core.driver_context import InitCommandContext, AutoLoadCommandContext, ResourceCommandContext, \
     AutoLoadAttribute, AutoLoadDetails, CancellationContext, ResourceRemoteCommandContext
 
@@ -10,7 +10,9 @@ from cloudshell.shell.core.session.logging_session import LoggingSessionContext
 
 import data_model
 from domain.operations.autoload import AutolaodOperation
+from domain.operations.cleanup import CleanupSandboxInfraOperation
 from domain.operations.deploy import DeployOperation
+from domain.operations.prepare import PrepareSandboxInfraOperation
 from domain.services.clients import ApiClientsProvider
 from domain.services.namespace import KubernetesNamespaceService
 from domain.services.networking import KubernetesNetworkingService
@@ -33,6 +35,8 @@ class KubernetesDriver (ResourceDriverInterface):
         self.autoload_operation = AutolaodOperation(api_clients_provider=self.api_clients_provider)
         self.deploy_operation = DeployOperation(self.networking_service,
                                                 self.namespace_service)
+        self.prepare_operation = PrepareSandboxInfraOperation(self.namespace_service)
+        self.cleanup_operation = CleanupSandboxInfraOperation(self.namespace_service)
 
     def initialize(self, context):
         """
@@ -171,15 +175,18 @@ class KubernetesDriver (ResourceDriverInterface):
         :return:
         :rtype: str
         """
-        '''
-        # parse the json strings into action objects
-        actions = self.request_parser.convert_driver_request_to_actions(request)
-        
-        action_results = _my_prepare_connectivity(context, actions, cancellation_context)
-        
-        return DriverResponse(action_results).to_driver_response_json()    
-        '''
-        pass
+        with LoggingSessionContext(context) as logger, ErrorHandlingContext(logger):
+            actions = self.request_parser.convert_driver_request_to_actions(request)
+
+            cloud_provider_resource = data_model.Kubernetes.create_from_context(context)
+            clients = self.api_clients_provider.get_api_clients(cloud_provider_resource.cluster_name)
+
+            action_results = self.prepare_operation.prepare(logger,
+                                                            context.reservation.reservation_id,
+                                                            clients,
+                                                            actions)
+
+            return DriverResponse(action_results).to_driver_response_json()
 
     def CleanupSandboxInfra(self, context, request):
         """
@@ -189,15 +196,19 @@ class KubernetesDriver (ResourceDriverInterface):
         :return:
         :rtype: str
         """
-        '''
-        # parse the json strings into action objects
-        actions = self.request_parser.convert_driver_request_to_actions(request)
-        
-        action_results = _my_cleanup_connectivity(context, actions)
+        with LoggingSessionContext(context) as logger, ErrorHandlingContext(logger):
+            actions = self.request_parser.convert_driver_request_to_actions(request)
+            cleanup_action = single(actions, lambda x: isinstance(x, CleanupNetwork))
 
-        return DriverResponse(action_results).to_driver_response_json()    
-        '''
-        pass
+            cloud_provider_resource = data_model.Kubernetes.create_from_context(context)
+            clients = self.api_clients_provider.get_api_clients(cloud_provider_resource.cluster_name)
+
+            action_result = self.cleanup_operation.cleanup(logger,
+                                                           clients,
+                                                           context.reservation.reservation_id,
+                                                           cleanup_action)
+
+            return DriverResponse([action_result]).to_driver_response_json()
 
     # </editor-fold>
 
