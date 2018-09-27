@@ -95,7 +95,7 @@ class KubernetesDriver (ResourceDriverInterface):
                                                              clients,
                                                              cancellation_context)
 
-            return DriverResponse(deploy_result).to_driver_response_json()
+            return DriverResponse([deploy_result]).to_driver_response_json()
 
     def PowerOn(self, context, ports):
         """

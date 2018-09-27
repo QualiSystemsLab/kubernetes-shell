@@ -39,7 +39,6 @@ class KubernetesDeploymentService:
                  queue_url_parts: str,
                  logger: Logger
                  ):
-        self._logger = logger
         self.github_command_builder = github_command_builder
         self.api_hostname = api_hostname
         self.config = config
@@ -52,6 +51,8 @@ class KubernetesDeploymentService:
         self.queue_url_parts = queue_url_parts
 
     def create_app(self,
+                   logger,
+                   clients,
                    namespace,
                    name,
                    labels,
@@ -70,8 +71,8 @@ class KubernetesDeploymentService:
         meta = V1ObjectMeta(name=name)
 
         annotations = {}
-        self.set_apps_info([name], annotations)
-        self.set_apps_debugging_protocols([app_request], annotations)
+        # self.set_apps_info([name], annotations)
+        # self.set_apps_debugging_protocols([app_request], annotations)
         template_meta = V1ObjectMeta(labels=labels, annotations=annotations)
 
         container = self._prepare_app_container(image=app.image,
@@ -311,13 +312,13 @@ class KubernetesDeploymentService:
                                ports=container_ports,
                                env=env_list)
 
-    @staticmethod
-    def set_apps_info(app_names: [], annotations: {}):
-        app_name_to_status_map = {app_name: '' for app_name in app_names}
-        annotations[DevboxTags.APPS] = KubernetesConverter.format_apps_status_annotation_value(app_name_to_status_map)
+    # @staticmethod
+    # def set_apps_info(app_names: [], annotations: {}):
+    #     app_name_to_status_map = {app_name: '' for app_name in app_names}
+    #     annotations[DevboxTags.APPS] = KubernetesConverter.format_apps_status_annotation_value(app_name_to_status_map)
 
-    @staticmethod
-    def set_apps_debugging_protocols(apps: [CreateSandboxAppRequest], annotations: {}):
-        debugging_protocols = list(set([p for a in apps for p in a.debugging_protocols]))
-        annotations[DevboxTags.DEBUGGING_PROTOCOLS] = KubernetesConverter.format_annotation_value(debugging_protocols)
+    # @staticmethod
+    # def set_apps_debugging_protocols(apps: [CreateSandboxAppRequest], annotations: {}):
+    #     debugging_protocols = list(set([p for a in apps for p in a.debugging_protocols]))
+    #     annotations[DevboxTags.DEBUGGING_PROTOCOLS] = KubernetesConverter.format_annotation_value(debugging_protocols)
 

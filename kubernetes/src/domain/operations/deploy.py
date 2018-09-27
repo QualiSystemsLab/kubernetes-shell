@@ -55,6 +55,11 @@ class DeployOperation(object):
             logger.info(created_service.spec.selector)
             deployment_labels.update(created_service.spec.selector)
 
+        # prepare result
+        return DeployAppResult(deploy_action.actionId,
+                               vmUuid=kubernetes_app_name,
+                               vmName=kubernetes_app_name,
+                               deployedAppAddress=kubernetes_app_name)  # todo - what address to use here?
 
 
 
