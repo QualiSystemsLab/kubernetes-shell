@@ -3,7 +3,7 @@ import unittest
 from mock import Mock
 
 from domain.operations.autoload import AutolaodOperation
-from domain.services.api_clients_provider import ApiClientsProvider
+from domain.services.clients import ApiClientsProvider
 
 
 class IntegrationTestAutolaodOperation(unittest.TestCase):

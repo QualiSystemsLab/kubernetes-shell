@@ -1,5 +1,5 @@
 import data_model
-from domain.services.api_clients_provider import ApiClientsProvider
+from domain.services.clients import ApiClientsProvider
 
 
 class AutolaodOperation(object):

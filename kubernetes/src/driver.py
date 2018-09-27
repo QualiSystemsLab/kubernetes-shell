@@ -1,7 +1,8 @@
 from cloudshell.core.context.error_handling_context import ErrorHandlingContext
 from cloudshell.cp.core import DriverRequestParser
+from cloudshell.cp.core.utils import single
 from cloudshell.shell.core.resource_driver_interface import ResourceDriverInterface
-from cloudshell.cp.core.models import DriverResponse
+from cloudshell.cp.core.models import DriverResponse, DeployApp, CleanupNetwork
 from cloudshell.shell.core.driver_context import InitCommandContext, AutoLoadCommandContext, ResourceCommandContext, \
     AutoLoadAttribute, AutoLoadDetails, CancellationContext, ResourceRemoteCommandContext
 
@@ -9,7 +10,12 @@ from cloudshell.shell.core.session.logging_session import LoggingSessionContext
 
 import data_model
 from domain.operations.autoload import AutolaodOperation
-from domain.services.api_clients_provider import ApiClientsProvider
+from domain.operations.cleanup import CleanupSandboxInfraOperation
+from domain.operations.deploy import DeployOperation
+from domain.operations.prepare import PrepareSandboxInfraOperation
+from domain.services.clients import ApiClientsProvider
+from domain.services.namespace import KubernetesNamespaceService
+from domain.services.networking import KubernetesNetworkingService
 
 
 class KubernetesDriver (ResourceDriverInterface):
@@ -22,9 +28,15 @@ class KubernetesDriver (ResourceDriverInterface):
 
         # services
         self.api_clients_provider = ApiClientsProvider()
+        self.networking_service = KubernetesNetworkingService()
+        self.namespace_service = KubernetesNamespaceService()
 
         # operations
         self.autoload_operation = AutolaodOperation(api_clients_provider=self.api_clients_provider)
+        self.deploy_operation = DeployOperation(self.networking_service,
+                                                self.namespace_service)
+        self.prepare_operation = PrepareSandboxInfraOperation(self.namespace_service)
+        self.cleanup_operation = CleanupSandboxInfraOperation(self.namespace_service)
 
     def initialize(self, context):
         """
@@ -43,8 +55,8 @@ class KubernetesDriver (ResourceDriverInterface):
         :return Attribute and sub-resource information for the Shell resource you can return an AutoLoadDetails object
         :rtype: AutoLoadDetails
         """
-        cloud_provider_resource = data_model.Kubernetes.create_from_context(context)
         with LoggingSessionContext(context) as logger, ErrorHandlingContext(logger):
+            cloud_provider_resource = data_model.Kubernetes.create_from_context(context)
             self.autoload_operation.validate_config(cloud_provider_resource)
 
         return AutoLoadDetails([], [])
@@ -62,22 +74,28 @@ class KubernetesDriver (ResourceDriverInterface):
         :return:
         :rtype: str
         """
+        with LoggingSessionContext(context) as logger, ErrorHandlingContext(logger):
+            # parse the json strings into action objects
+            actions = self.request_parser.convert_driver_request_to_actions(request)
 
-        '''
-        # parse the json strings into action objects
-        actions = self.request_parser.convert_driver_request_to_actions(request)
-        
-        # extract DeployApp action
-        deploy_action = single(actions, lambda x: isinstance(x, DeployApp))
-        
-        # if we have multiple supported deployment options use the 'deploymentPath' property 
-        # to decide which deployment option to use. 
-        deployment_name = deploy_action.actionParams.deployment.deploymentPath
-        
-        deploy_result = _my_deploy_method(context, actions, cancellation_context)
-        return DriverResponse(deploy_result).to_driver_response_json()
-        '''
-        pass
+            # extract DeployApp action
+            deploy_action = single(actions, lambda x: isinstance(x, DeployApp))
+
+            # if we have multiple supported deployment options use the 'deploymentPath' property
+            # to decide which deployment option to use.
+            # deployment_name = deploy_action.actionParams.deployment.deploymentPath
+
+            cloud_provider_resource = data_model.Kubernetes.create_from_context(context)
+            clients = self.api_clients_provider.get_api_clients(cloud_provider_resource.cluster_name)
+
+            deploy_result = self.deploy_operation.deploy_app(logger,
+                                                             context.reservation.reservation_id,
+                                                             cloud_provider_resource,
+                                                             deploy_action,
+                                                             clients,
+                                                             cancellation_context)
+
+            return DriverResponse([deploy_result]).to_driver_response_json()
 
     def PowerOn(self, context, ports):
         """
@@ -157,15 +175,18 @@ class KubernetesDriver (ResourceDriverInterface):
         :return:
         :rtype: str
         """
-        '''
-        # parse the json strings into action objects
-        actions = self.request_parser.convert_driver_request_to_actions(request)
-        
-        action_results = _my_prepare_connectivity(context, actions, cancellation_context)
-        
-        return DriverResponse(action_results).to_driver_response_json()    
-        '''
-        pass
+        with LoggingSessionContext(context) as logger, ErrorHandlingContext(logger):
+            actions = self.request_parser.convert_driver_request_to_actions(request)
+
+            cloud_provider_resource = data_model.Kubernetes.create_from_context(context)
+            clients = self.api_clients_provider.get_api_clients(cloud_provider_resource.cluster_name)
+
+            action_results = self.prepare_operation.prepare(logger,
+                                                            context.reservation.reservation_id,
+                                                            clients,
+                                                            actions)
+
+            return DriverResponse(action_results).to_driver_response_json()
 
     def CleanupSandboxInfra(self, context, request):
         """
@@ -175,15 +196,19 @@ class KubernetesDriver (ResourceDriverInterface):
         :return:
         :rtype: str
         """
-        '''
-        # parse the json strings into action objects
-        actions = self.request_parser.convert_driver_request_to_actions(request)
-        
-        action_results = _my_cleanup_connectivity(context, actions)
+        with LoggingSessionContext(context) as logger, ErrorHandlingContext(logger):
+            actions = self.request_parser.convert_driver_request_to_actions(request)
+            cleanup_action = single(actions, lambda x: isinstance(x, CleanupNetwork))
 
-        return DriverResponse(action_results).to_driver_response_json()    
-        '''
-        pass
+            cloud_provider_resource = data_model.Kubernetes.create_from_context(context)
+            clients = self.api_clients_provider.get_api_clients(cloud_provider_resource.cluster_name)
+
+            action_result = self.cleanup_operation.cleanup(logger,
+                                                           clients,
+                                                           context.reservation.reservation_id,
+                                                           cleanup_action)
+
+            return DriverResponse([action_result]).to_driver_response_json()
 
     # </editor-fold>
 

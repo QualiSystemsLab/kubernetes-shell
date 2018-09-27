@@ -8,6 +8,10 @@ from model.clients import KubernetesClients
 class ApiClientsProvider(object):
 
     def get_api_clients(self, cluster_name):
+        """
+        :param str cluster_name:
+        :rtype: KubernetesClients
+        """
         contexts, active_context = config.list_kube_config_contexts()
         if not contexts:
             raise ValueError("Cannot find any context in kube-config file.")
