@@ -1,6 +1,6 @@
 from cloudshell.cp.core.utils import first_or_default
 from kubernetes import config
-from kubernetes.client import CoreV1Api
+from kubernetes.client import CoreV1Api, AppsV1beta1Api
 
 from model.clients import KubernetesClients
 
@@ -24,5 +24,6 @@ class ApiClientsProvider(object):
         # init api clients
         api_client = config.new_client_from_config(context=context['name'])
         core_api = CoreV1Api(api_client=api_client)
+        apps_api = AppsV1beta1Api(api_client=api_client)
 
-        return KubernetesClients(api_client, core_api)
+        return KubernetesClients(api_client, core_api, apps_api)

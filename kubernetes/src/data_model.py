@@ -403,6 +403,21 @@ class KubernetesService(object):
         self.attributes['Kubernetes.Kubernetes Service.External Ports'] = value
 
     @property
+    def replicas(self):
+        """
+        :rtype: float
+        """
+        return self.attributes['Kubernetes.Kubernetes Service.Replicas'] if 'Kubernetes.Kubernetes Service.Replicas' in self.attributes else None
+
+    @replicas.setter
+    def replicas(self, value='1'):
+        """
+        
+        :type value: float
+        """
+        self.attributes['Kubernetes.Kubernetes Service.Replicas'] = value
+
+    @property
     def autoload(self):
         """
         :rtype: bool

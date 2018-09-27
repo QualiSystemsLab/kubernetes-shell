@@ -11,6 +11,9 @@ def get_provider_tag_name(tag_name):
 class TagsService(object):
     SANDBOX_ID = get_provider_tag_name('sandbox-id')
 
+    INTERNAL_PORT_PREFIX = 'pi'
+    EXTERNAL_PORT_PREFIX = 'pe'
+
     # SERVICES
     INTERNAL_SERVICE = get_provider_tag_name("internal-service")
     EXTERNAL_SERVICE = get_provider_tag_name("external-service")

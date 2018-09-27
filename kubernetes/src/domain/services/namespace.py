@@ -1,3 +1,4 @@
+from cloudshell.cp.core.utils import first_or_default
 from kubernetes.client import V1Namespace, V1ObjectMeta, V1NamespaceList, V1DeleteOptions
 from kubernetes.client.rest import ApiException
 
@@ -47,16 +48,22 @@ class KubernetesNamespaceService(object):
 
         return clients.core_api.list_namespace(label_selector=filter_query)
 
-    def get_by_id(self, clients, sandbox_id):
+    def get_single_by_id(self, clients, sandbox_id):
         """
         :param KubernetesClients clients:
         :param str sandbox_id:
-        :rtype: V1NamespaceList
+        :rtype: V1Namespace
         """
 
         filter_query = '{label}=={value}'.format(label=TagsService.SANDBOX_ID, value=sandbox_id)
 
-        return self.get(clients, filter_query)
+        api_result = self.get(clients, filter_query)
+        namespaces = list(api_result.items)
+
+        if len(namespaces) > 1:
+            raise ValueError("Found multiple namespaces with the same sandbox id '{}'".format(sandbox_id))
+
+        return next(iter(namespaces), None)
 
     def get(self, clients, filter_query):
         """

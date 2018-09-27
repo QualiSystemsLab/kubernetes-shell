@@ -46,7 +46,7 @@ class PrepareSandboxInfraOperation(object):
         labels = {TagsService.SANDBOX_ID: sandbox_id}
 
         # check if namesapce already exists
-        namespace_obj = next(iter(self.namespace_service.get_by_id(clients, sandbox_id).items), None)
+        namespace_obj = self.namespace_service.get_single_by_id(clients, sandbox_id)
         if not namespace_obj:
             # create namespace for sandbox
             created_namespace = self.namespace_service.create(clients, requested_namespace_name, labels, None)

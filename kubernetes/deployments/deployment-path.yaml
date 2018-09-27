@@ -34,6 +34,11 @@ node_types:
         type: string
         description:
         tags: [user_input]
+      Replicas:
+        type: integer
+        default: 1
+        description:
+        tags: [user_input]
 
 
     #    ## custom attributes example for deployment option

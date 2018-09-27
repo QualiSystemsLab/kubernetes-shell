@@ -14,6 +14,7 @@ from domain.operations.cleanup import CleanupSandboxInfraOperation
 from domain.operations.deploy import DeployOperation
 from domain.operations.prepare import PrepareSandboxInfraOperation
 from domain.services.clients import ApiClientsProvider
+from domain.services.deployment import KubernetesDeploymentService
 from domain.services.namespace import KubernetesNamespaceService
 from domain.services.networking import KubernetesNetworkingService
 
@@ -30,11 +31,13 @@ class KubernetesDriver (ResourceDriverInterface):
         self.api_clients_provider = ApiClientsProvider()
         self.networking_service = KubernetesNetworkingService()
         self.namespace_service = KubernetesNamespaceService()
+        self.deployment_service = KubernetesDeploymentService()
 
         # operations
         self.autoload_operation = AutolaodOperation(api_clients_provider=self.api_clients_provider)
         self.deploy_operation = DeployOperation(self.networking_service,
-                                                self.namespace_service)
+                                                self.namespace_service,
+                                                self.deployment_service)
         self.prepare_operation = PrepareSandboxInfraOperation(self.namespace_service)
         self.cleanup_operation = CleanupSandboxInfraOperation(self.namespace_service)
 
