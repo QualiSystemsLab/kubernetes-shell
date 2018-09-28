@@ -7,4 +7,4 @@ install:
   - pip install -r kubernetes/src/requirements.txt
 
 script:
-  - python kubernetes/tests/run_tests.py
+  - nosetests kubernetes/tests --with-coverage --cover-package kubernetes/src
