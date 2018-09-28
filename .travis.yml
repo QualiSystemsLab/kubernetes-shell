@@ -1,0 +1,11 @@
+language: python
+python:
+    - "2.7"
+
+install:
+  - pip install -r test_requirements.txt
+  - pip install -r kubernetes/src/requirements.txt
+  - bash ./install_dependencies.sh
+
+script:
+  - python kubernetes/tests/run_tests.py
