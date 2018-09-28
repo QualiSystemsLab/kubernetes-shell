@@ -5,7 +5,6 @@ python:
 install:
   - pip install -r kubernetes/test_requirements.txt
   - pip install -r kubernetes/src/requirements.txt
-  - bash ./install_dependencies.sh
 
 script:
   - python kubernetes/tests/run_tests.py
