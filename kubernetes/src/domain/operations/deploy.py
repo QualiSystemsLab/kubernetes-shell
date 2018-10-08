@@ -1,6 +1,7 @@
 from cloudshell.cp.core.models import DeployApp, DeployAppResult
 from cloudshell.shell.core.driver_context import CancellationContext
 
+from domain.common.additional_data_keys import DeployedAppAdditionalDataKeys
 from domain.common.utils import convert_to_int_list, create_deployment_model_from_action, \
     convert_app_name_to_valide_kubernetes_name
 from domain.services.tags import TagsService
@@ -10,6 +11,7 @@ from domain.services.networking import KubernetesNetworkingService
 from domain.services.namespace import KubernetesNamespaceService
 from domain.services.deployment import KubernetesDeploymentService
 from logging import Logger
+from typing import Dict
 
 from model.deployment_requests import AppDeploymentRequest, ApplicationImage
 
@@ -60,7 +62,6 @@ class DeployOperation(object):
 
         deployment_labels = dict(sandbox_tag)
         for created_service in created_services:
-            logger.info(created_service.spec.selector)
             deployment_labels.update(created_service.spec.selector)
 
         image = ApplicationImage(deployment_model.docker_image_name,
@@ -86,10 +87,13 @@ class DeployOperation(object):
                                            labels=deployment_labels,
                                            app=deployment_request)
 
+        additional_data = self._create_additional_data(namespace=namespace)
+
         # prepare result
         return DeployAppResult(deploy_action.actionId,
                                vmUuid=kubernetes_app_name,
                                vmName=deploy_action.actionParams.appName,
+                               deployedAppAdditionalData=additional_data,
                                deployedAppAddress=kubernetes_app_name)  # todo - what address to use here?
 
     def _validate_namespace(self, namespace_obj, sandbox_id):
@@ -105,3 +109,12 @@ class DeployOperation(object):
         if replicas < 1:
             raise ValueError("The number of replicas for the application must be 1 or greater")
         return replicas
+
+    def _create_additional_data(self, namespace):
+        """
+        :param str namespace:
+        :rtype: Dict
+        """
+        return {
+            DeployedAppAdditionalDataKeys.NAMESPACE: namespace
+        }

@@ -105,3 +105,4 @@ venv.bak/
 
 kubernetes/*.zip
 /.idea/*
+/kubernetes/src/debug.xml
