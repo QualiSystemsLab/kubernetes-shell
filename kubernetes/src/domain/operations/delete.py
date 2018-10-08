@@ -3,6 +3,7 @@ from model.clients import KubernetesClients
 from domain.services.deployment import KubernetesDeploymentService
 from domain.services.networking import KubernetesNetworkingService
 
+
 class DeleteInstanceOperation(object):
     def __init__(self, networking_service, deployment_service):
         """
