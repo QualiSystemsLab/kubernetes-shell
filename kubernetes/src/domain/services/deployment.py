@@ -1,8 +1,12 @@
+import time
 from logging import Logger
+from multiprocessing import TimeoutError
+
 from typing import List, Dict
 
 from kubernetes.client import V1ObjectMeta, AppsV1beta1Deployment, AppsV1beta1Api, AppsV1beta1DeploymentSpec, \
-    V1PodTemplateSpec, V1PodSpec, V1Container, V1ContainerPort, V1EnvVar
+    V1PodTemplateSpec, V1PodSpec, V1Container, V1ContainerPort, V1EnvVar, V1DeleteOptions
+from kubernetes.client.rest import ApiException
 
 from domain.services.tags import TagsService
 from model.deployment_requests import AppComputeSpecKubernetes, AppComputeSpecKubernetesResources, \
@@ -13,6 +17,32 @@ from model.clients import KubernetesClients
 class KubernetesDeploymentService:
     def __init__(self):
         pass
+
+    def delete_app(self, logger, clients, namespace, app_name_to_delete):
+        """
+        Delete a deployment immediately. All pods are deleted in the foreground.
+        :param Logger logger:
+        :param KubernetesClients clients:
+        :param str namespace:
+        :param str app_name_to_delete:
+        :return:
+        """
+        try:
+            delete_options = V1DeleteOptions(propagation_policy='Foreground',
+                                             grace_period_seconds=0)
+            clients.apps_api.delete_namespaced_deployment(name=app_name_to_delete,
+                                                          namespace=namespace,
+                                                          body=delete_options,
+                                                          pretty='true')
+        except ApiException as e:
+            if e.status == 404:
+                # Deployment does not exist, nothing to delete but
+                # we can consider this a success.
+                logger.warn('not deleting nonexistent deploy/{} from ns/{}'.format(app_name_to_delete, namespace))
+            else:
+                raise
+        else:
+            logger.info('deleted deploy/{} from ns/{}'.format(app_name_to_delete, namespace))
 
     def create_app(self,
                    logger,
@@ -48,6 +78,10 @@ class KubernetesDeploymentService:
         app_template = V1PodTemplateSpec(metadata=template_meta, spec=pod_spec)
         app_spec = AppsV1beta1DeploymentSpec(replicas=app.replicas, template=app_template)
         deployment = AppsV1beta1Deployment(metadata=meta, spec=app_spec)
+
+        logger.info("Creating namespaced deployment for app {}".format(name))
+        logger.debug("Creating namespaced deployment with the following specs:")
+        logger.debug(deployment.to_str())
 
         return clients.apps_api.create_namespaced_deployment(namespace=namespace,
                                                              body=deployment,
@@ -123,6 +157,37 @@ class KubernetesDeploymentService:
                                args=args,
                                ports=container_ports)
             # env=env_list)
+
+    def wait_until_exists(self,
+                          logger,
+                          clients,
+                          namespace,
+                          app_name,
+                          delay=10,
+                          timeout=600):
+        """
+        Waits until the deployment called 'app_name' exists in Kubernetes regardless of state
+        :param int delay: the time in seconds between each pull
+        :param int timeout: timeout in seconds until time out exception will raised
+        :param Logger logger:
+        :param KubernetesClients clients:
+        :param str namespace:
+        :param str app_name:
+        """
+        query_selector = "{app_selector}=={app_name}".format(
+            app_selector=TagsService.get_default_selector(app_name),
+            app_name=app_name)
+
+        start_time = time.time()
+
+        while True:
+            result = \
+                clients.apps_api.list_namespaced_deployment(namespace=namespace, label_selector=query_selector).items
+            if not result:
+                return
+            if time.time() - start_time >= timeout:
+                raise TimeoutError('Timeout: Waiting for deployment {} to be deleted'.format(app_name))
+            time.sleep(delay)
 
     # @staticmethod
     # def set_apps_info(app_names: [], annotations: {}):

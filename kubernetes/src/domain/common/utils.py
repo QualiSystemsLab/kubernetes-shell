@@ -34,3 +34,18 @@ def convert_app_name_to_valide_kubernetes_name(app_name):
     :rtype: str
     """
     return app_name.lower().replace(' ', '-').replace('_', '-')
+
+
+def get_custom_params_value(custom_params_list, key):
+    """
+    :param List custom_params_list:
+    :param str key:
+    :rtype: str
+    """
+    param = next(iter(
+        filter(lambda x: x['name'] == key,
+               custom_params_list)), None)
+    if param:
+        return param['value']
+    else:
+        return None

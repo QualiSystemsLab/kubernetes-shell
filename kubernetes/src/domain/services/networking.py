@@ -1,7 +1,9 @@
 from logging import Logger
 from typing import List
 
-from kubernetes.client import V1ObjectMeta, V1Service, CoreV1Api, V1ServiceSpec, V1ServicePort, V1ServiceList
+from kubernetes.client import V1ObjectMeta, V1Service, CoreV1Api, V1ServiceSpec, V1ServicePort, V1ServiceList, \
+    V1DeleteOptions
+from kubernetes.client.rest import ApiException
 
 from domain.services.tags import TagsService
 from model.clients import KubernetesClients
@@ -43,11 +45,12 @@ class KubernetesNetworkingService(object):
                                    ports=internal_ports,
                                    spec_type='ClusterIP')
             services.append(service)
+            logger.info('Created internal service for app {}'.format(name))
 
         if external_ports:
             external_service_labels = dict(labels)
             external_service_labels.update({TagsService.EXTERNAL_SERVICE: 'true'})
-            service_name = "{}-{}".format(name, TagsService.EXTERNAL_SERVICE_POSTFIX)
+            service_name = self._format_external_service_name(name)
             service = self._create(logger=logger,
                                    core_v1_api=clients.core_api,
                                    namespace=namespace,
@@ -57,8 +60,26 @@ class KubernetesNetworkingService(object):
                                    ports=external_ports,
                                    spec_type='LoadBalancer')
             services.append(service)
+            logger.info('Created external service for app {}'.format(name))
 
         return services
+
+    def _format_external_service_name(self, name):
+        return "{}-{}".format(name, TagsService.EXTERNAL_SERVICE_POSTFIX)
+
+    def delete_internal_external_set(self, logger, clients, service_name_to_delete, namespace):
+        """
+        :param str namespace:
+        :param str service_name_to_delete:
+        :param Logger logger:
+        :param KubernetesClients clients:
+        """
+        # delete internal service if exists
+        self.delete_service(logger, clients, service_name_to_delete, namespace)
+
+        # delete external service if exists
+        external_service_name_to_delete = self._format_external_service_name(service_name_to_delete)
+        self.delete_service(logger, clients, external_service_name_to_delete, namespace)
 
     def _create(self,
                 logger,
@@ -119,3 +140,27 @@ class KubernetesNetworkingService(object):
         :rtype: V1ServiceList
         """
         return clients.core_api.list_service_for_all_namespaces(label_selector=filter_query)
+
+    def delete_service(self, logger, clients, service_name_to_delete, namespace):
+        """
+        :param str namespace:
+        :param str service_name_to_delete:
+        :param Logger logger:
+        :param KubernetesClients clients:
+        :return:
+        """
+        try:
+            delete_options = V1DeleteOptions(propagation_policy='Foreground',
+                                             grace_period_seconds=0)
+            clients.core_api.delete_namespaced_service(name=service_name_to_delete,
+                                                       namespace=namespace,
+                                                       body=delete_options)
+        except ApiException as e:
+            if e.status == 404:
+                # Service does not exist, nothing to delete but
+                # we can consider this a success.
+                logger.warn('not deleting nonexistent service/{} from ns/{}'.format(service_name_to_delete, namespace))
+            else:
+                raise
+        else:
+            logger.info('deleted service/{} from ns/{}'.format(service_name_to_delete, namespace))
