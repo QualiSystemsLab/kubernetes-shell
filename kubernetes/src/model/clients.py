@@ -1,4 +1,4 @@
-from kubernetes.client import ApiClient, CoreV1Api
+from kubernetes.client import ApiClient, CoreV1Api, AppsV1beta1Api
 
 
 class KubernetesClients(object):

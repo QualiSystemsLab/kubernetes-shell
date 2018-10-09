@@ -44,13 +44,7 @@ class KubernetesDeploymentService:
         else:
             logger.info('deleted deploy/{} from ns/{}'.format(app_name_to_delete, namespace))
 
-    def create_app(self,
-                   logger,
-                   clients,
-                   namespace,
-                   name,
-                   labels,
-                   app):
+    def create_app(self, logger, clients, namespace, name, labels, app):
         """
         :param Logger logger:
         :param KubernetesClients clients:
@@ -88,11 +82,7 @@ class KubernetesDeploymentService:
                                                              pretty='true')
 
     @staticmethod
-    def _prepare_app_container(image,
-                               compute_spec,
-                               name,
-                               internal_ports,
-                               external_ports):
+    def _prepare_app_container(image, compute_spec, name, internal_ports, external_ports):
         """
         :param ApplicationImage image:
         :param AppComputeSpecKubernetes compute_spec:
@@ -158,13 +148,7 @@ class KubernetesDeploymentService:
                                ports=container_ports)
             # env=env_list)
 
-    def wait_until_exists(self,
-                          logger,
-                          clients,
-                          namespace,
-                          app_name,
-                          delay=10,
-                          timeout=600):
+    def wait_until_exists(self, logger, clients, namespace, app_name, delay=10, timeout=600):
         """
         Waits until the deployment called 'app_name' exists in Kubernetes regardless of state
         :param int delay: the time in seconds between each pull
@@ -174,9 +158,7 @@ class KubernetesDeploymentService:
         :param str namespace:
         :param str app_name:
         """
-        query_selector = "{app_selector}=={app_name}".format(
-            app_selector=TagsService.get_default_selector(app_name),
-            app_name=app_name)
+        query_selector = self._prepare_deployment_default_label_selector(app_name)
 
         start_time = time.time()
 
@@ -188,6 +170,42 @@ class KubernetesDeploymentService:
             if time.time() - start_time >= timeout:
                 raise TimeoutError('Timeout: Waiting for deployment {} to be deleted'.format(app_name))
             time.sleep(delay)
+
+    def _prepare_deployment_default_label_selector(self, app_name):
+        query_selector = "{app_selector}=={app_name}".format(
+            app_selector=TagsService.get_default_selector(app_name),
+            app_name=app_name)
+        return query_selector
+
+    def update_deployment(self, logger, clients, namespace, app_name, updated_deployment):
+        """
+        :param Logger logger:
+        :param KubernetesClients clients:
+        :param str namespace:
+        :param str app_name:
+        :param AppsV1beta1Deployment updated_deployment:
+        :return:
+        """
+        api_response = clients.apps_api.patch_namespaced_deployment(
+            name=app_name,
+            namespace=namespace,
+            body=updated_deployment)
+        logger.info("Deployment {} in ns/{} updated. Status='{}'".format(app_name, namespace, str(api_response.status)))
+
+    def get_deployment_by_name(self, clients, namespace, app_name):
+        """
+        :param KubernetesClients clients:
+        :param str namespace:
+        :param str app_name:
+        :rtype: AppsV1beta1Deployment
+        """
+        query_selector = self._prepare_deployment_default_label_selector(app_name)
+        items = clients.apps_api.list_namespaced_deployment(namespace=namespace, label_selector=query_selector).items
+        if not items:
+            return None
+        if len(items) > 1:
+            raise ValueError("More than a one deployment found with the same app name {}".format(app_name))
+        return items[0]
 
     # @staticmethod
     # def set_apps_info(app_names: [], annotations: {}):

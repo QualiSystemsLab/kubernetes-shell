@@ -1,30 +1,27 @@
-import json
-
 from cloudshell.core.context.error_handling_context import ErrorHandlingContext
 from cloudshell.cp.core import DriverRequestParser
-from cloudshell.cp.core.utils import single
-from cloudshell.shell.core.resource_driver_interface import ResourceDriverInterface
 from cloudshell.cp.core.models import DriverResponse, DeployApp, CleanupNetwork
+from cloudshell.cp.core.utils import single
 from cloudshell.shell.core.driver_context import InitCommandContext, AutoLoadCommandContext, ResourceCommandContext, \
-    AutoLoadAttribute, AutoLoadDetails, CancellationContext, ResourceRemoteCommandContext
-
+    AutoLoadDetails, CancellationContext, ResourceRemoteCommandContext
+from cloudshell.shell.core.resource_driver_interface import ResourceDriverInterface
 from cloudshell.shell.core.session.logging_session import LoggingSessionContext
 
 import data_model
-from domain.common.additional_data_keys import DeployedAppAdditionalDataKeys
-from domain.common.utils import get_custom_params_value
 from domain.operations.autoload import AutolaodOperation
 from domain.operations.cleanup import CleanupSandboxInfraOperation
 from domain.operations.delete import DeleteInstanceOperation
 from domain.operations.deploy import DeployOperation
+from domain.operations.power import PowerOperation
 from domain.operations.prepare import PrepareSandboxInfraOperation
 from domain.services.clients import ApiClientsProvider
 from domain.services.deployment import KubernetesDeploymentService
 from domain.services.namespace import KubernetesNamespaceService
 from domain.services.networking import KubernetesNetworkingService
+from model.deployed_app import DeployedAppResource
 
 
-class KubernetesDriver (ResourceDriverInterface):
+class KubernetesDriver(ResourceDriverInterface):
 
     def __init__(self):
         """
@@ -47,6 +44,7 @@ class KubernetesDriver (ResourceDriverInterface):
         self.cleanup_operation = CleanupSandboxInfraOperation(self.namespace_service)
         self.delete_instance_operation = DeleteInstanceOperation(self.networking_service,
                                                                  self.deployment_service)
+        self.power_operation = PowerOperation(self.deployment_service)
 
     def initialize(self, context):
         """
@@ -111,17 +109,25 @@ class KubernetesDriver (ResourceDriverInterface):
         """
         Will power on the compute resource
         :param ResourceRemoteCommandContext context:
-        :param ports:
         """
-        pass
+        with LoggingSessionContext(context) as logger, ErrorHandlingContext(logger):
+            cloud_provider_resource = data_model.Kubernetes.create_from_context(context)
+            clients = self.api_clients_provider.get_api_clients(cloud_provider_resource.cluster_name)
+            deployed_app = DeployedAppResource(context.remote_endpoints[0])
+
+            self.power_operation.power_on(logger, clients, deployed_app)
 
     def PowerOff(self, context, ports):
         """
         Will power off the compute resource
         :param ResourceRemoteCommandContext context:
-        :param ports:
         """
-        pass
+        with LoggingSessionContext(context) as logger, ErrorHandlingContext(logger):
+            cloud_provider_resource = data_model.Kubernetes.create_from_context(context)
+            clients = self.api_clients_provider.get_api_clients(cloud_provider_resource.cluster_name)
+            deployed_app = DeployedAppResource(context.remote_endpoints[0])
+
+            self.power_operation.power_off(logger, clients, deployed_app)
 
     def PowerCycle(self, context, ports, delay):
         pass
@@ -135,21 +141,13 @@ class KubernetesDriver (ResourceDriverInterface):
         with LoggingSessionContext(context) as logger, ErrorHandlingContext(logger):
             cloud_provider_resource = data_model.Kubernetes.create_from_context(context)
             clients = self.api_clients_provider.get_api_clients(cloud_provider_resource.cluster_name)
-
-            remote_resource = context.remote_endpoints[0]
-            deployed_app_dict = json.loads(remote_resource.app_context.deployed_app_json)
-            vm_details = deployed_app_dict['vmdetails']
-
-            namespace = get_custom_params_value(vm_details['vmCustomParams'], DeployedAppAdditionalDataKeys.NAMESPACE)
-            if not namespace:
-                raise ValueError("Something went wrong. Couldn't get namespace from custom params for deployed app '{}'"
-                                 .format(remote_resource.name))
+            deployed_app = DeployedAppResource(context.remote_endpoints[0])
 
             self.delete_instance_operation.delete_instance(logger=logger,
                                                            clients=clients,
-                                                           kubernetes_name=vm_details['uid'],
-                                                           deployed_app_name=remote_resource.name,
-                                                           namespace=namespace)
+                                                           kubernetes_name=deployed_app.kubernetes_name,
+                                                           deployed_app_name=deployed_app.cloudshell_resource_name,
+                                                           namespace=deployed_app.namespace)
 
     def GetVmDetails(self, context, requests, cancellation_context):
         """
@@ -172,7 +170,6 @@ class KubernetesDriver (ResourceDriverInterface):
         pass
 
     # </editor-fold>
-
 
     ### NOTE: According to the Connectivity Type of your shell, remove the commands that are not
     ###       relevant from this file and from drivermetadata.xml.
