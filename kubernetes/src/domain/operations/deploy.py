@@ -87,7 +87,7 @@ class DeployOperation(object):
                                            labels=deployment_labels,
                                            app=deployment_request)
 
-        additional_data = self._create_additional_data(namespace=namespace)
+        additional_data = self._create_additional_data(namespace, replicas)
 
         # prepare result
         return DeployAppResult(deploy_action.actionId,
@@ -110,11 +110,13 @@ class DeployOperation(object):
             raise ValueError("The number of replicas for the application must be 1 or greater")
         return replicas
 
-    def _create_additional_data(self, namespace):
+    def _create_additional_data(self, namespace, replicas):
         """
         :param str namespace:
+        :param int replicas:
         :rtype: Dict
         """
         return {
-            DeployedAppAdditionalDataKeys.NAMESPACE: namespace
+            DeployedAppAdditionalDataKeys.NAMESPACE: namespace,
+            DeployedAppAdditionalDataKeys.REPLICAS: replicas
         }

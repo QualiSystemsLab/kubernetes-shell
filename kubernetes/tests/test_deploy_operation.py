@@ -92,7 +92,8 @@ class TestDeployOperation(unittest.TestCase):
         self.assertEquals(result.vmUuid, expected_kubernetes_app_name)
         self.assertEquals(result.vmName, self.deploy_action.actionParams.appName)
         self.assertEquals(result.deployedAppAddress, expected_kubernetes_app_name)
-        self.assertDictEqual(result.deployedAppAdditionalData, {DeployedAppAdditionalDataKeys.NAMESPACE: namespace})
+        self.assertDictEqual(result.deployedAppAdditionalData, {DeployedAppAdditionalDataKeys.NAMESPACE: namespace,
+                                                                DeployedAppAdditionalDataKeys.REPLICAS: 3})
 
     @patch('domain.operations.deploy.create_deployment_model_from_action')
     def test_deploy_raises_when_no_namespace(self, create_deployment_model_from_action):

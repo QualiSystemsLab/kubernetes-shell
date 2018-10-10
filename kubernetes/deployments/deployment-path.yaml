@@ -40,6 +40,10 @@ node_types:
         description:
         tags: [user_input]
 
+      Wait for IP:
+        type: boolean
+        default: False
+
 
     #    ## custom attributes example for deployment option
 #    properties:
