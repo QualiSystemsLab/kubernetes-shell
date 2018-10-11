@@ -72,9 +72,12 @@ class DeployOperation(object):
         # AppComputeSpecKubernetes object accordingly
 
         replicas = self._get_and_validate_replicas_number(deployment_model)
+        environment_variables = self._get_environment_variables_dict(logger, deployment_model.environment_variables)
 
         deployment_request = AppDeploymentRequest(name=kubernetes_app_name,
                                                   image=image,
+                                                  start_command=deployment_model.start_command,
+                                                  environment_variables=environment_variables,
                                                   compute_spec=compute_spec,
                                                   internal_ports=internal_ports,
                                                   external_ports=external_ports,
@@ -120,3 +123,26 @@ class DeployOperation(object):
             DeployedAppAdditionalDataKeys.NAMESPACE: namespace,
             DeployedAppAdditionalDataKeys.REPLICAS: replicas
         }
+
+    def _get_environment_variables_dict(self, logger, environment_variables):
+        """
+        :param Logger logger:
+        :param str environment_variables:
+        :rtype: Dict[str, str]
+        """
+        if not environment_variables or not environment_variables.strip():
+            return None
+
+        env_list = environment_variables.strip().split(',')
+
+        env_dict = {}
+
+        for env_str in env_list:
+            try:
+                key, value = env_str.split('=', 2)
+                env_dict.update({key.strip(): value.strip()})
+            except ValueError:
+                logger.exception("Cannot unpack env var '{}' to key value pair. Missing '=' sign?".format(env_str))
+                raise ValueError("Cannot parse environment variable '{}'. Expected format: key=value".format(env_str))
+
+        return env_dict

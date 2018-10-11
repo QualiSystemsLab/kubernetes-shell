@@ -1,3 +1,6 @@
+from typing import List, Dict
+
+
 class ApplicationImage:
     def __init__(self, name, tag):
         """
@@ -29,14 +32,11 @@ class AppComputeSpecKubernetes:
 
 
 class AppDeploymentRequest:
-    def __init__(self,
-                 name,
-                 image,
-                 compute_spec,
-                 internal_ports,
-                 external_ports,
+    def __init__(self, name, image, start_command, environment_variables, compute_spec, internal_ports, external_ports,
                  replicas=1):
         """
+        :param str start_command:
+        :param Dict[str, str] environment_variables:
         :param str name:
         :param ApplicationImage image:
         :param AppComputeSpecKubernetes compute_spec:
@@ -44,6 +44,8 @@ class AppDeploymentRequest:
         :param List[int] external_ports:
         :param int replicas:
         """
+        self.environment_variables = environment_variables
+        self.start_command = start_command
         self.compute_spec = compute_spec
         self.replicas = replicas
         self.internal_ports = internal_ports

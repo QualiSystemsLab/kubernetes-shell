@@ -26,7 +26,8 @@ class TestDeployOperation(unittest.TestCase):
 
     @patch('domain.operations.deploy.ApplicationImage')
     @patch('domain.operations.deploy.AppDeploymentRequest')
-    def test_deploy_basic_flow(self, app_deployment_request_class, application_image_class):
+    def test_deploy_basic_flow(self, app_deployment_request_class,
+                               application_image_class):
         # arrange
         namespace_obj = Mock()
         namespace = namespace_obj.metadata.name
@@ -39,7 +40,9 @@ class TestDeployOperation(unittest.TestCase):
             'Kubernetes.Kubernetes Service.External Ports': '80, 443',
             'Kubernetes.Kubernetes Service.Replicas': '3',
             'Kubernetes.Kubernetes Service.Docker Image Name': 'Ubuntu',
-            'Kubernetes.Kubernetes Service.Docker Image Tag': '16.04'
+            'Kubernetes.Kubernetes Service.Docker Image Tag': '16.04',
+            'Kubernetes.Kubernetes Service.Start Command': 'do stuff',
+            'Kubernetes.Kubernetes Service.Environment Variables': 'k1=v1'
         }
 
         internal_service_mock = Mock()
@@ -74,7 +77,9 @@ class TestDeployOperation(unittest.TestCase):
             compute_spec=None,
             internal_ports=[5589, 5560, 22],
             external_ports=[80, 443],
-            replicas=3
+            replicas=3,
+            start_command='do stuff',
+            environment_variables={'k1': 'v1'}
         )
 
         self.deployment_service.create_app.assert_called_once_with(
@@ -108,3 +113,53 @@ class TestDeployOperation(unittest.TestCase):
                                                  deploy_action=self.deploy_action,
                                                  clients=self.clients,
                                                  cancellation_context=self.cancellation_context)
+
+    def test_get_environment_variables_dict_multi_env_vars(self):
+        # arrange
+        environment_variables_str = 'env1=val1, env2 =val2 , env3 = val3, env4='
+
+        # act
+        result = self.deployment_operation._get_environment_variables_dict(
+            logger=Mock(),
+            environment_variables=environment_variables_str)
+
+        # assert
+        self.assertDictEqual(result, {'env1': 'val1',
+                                      'env2': 'val2',
+                                      'env3': 'val3',
+                                      'env4': ''})
+
+    def test_get_environment_variables_dict_single_env_var_with_extra_spaces(self):
+        # arrange
+        environment_variables_str = '  env1  = val1 '
+
+        # act
+        result = self.deployment_operation._get_environment_variables_dict(
+            logger=Mock(),
+            environment_variables=environment_variables_str)
+
+        # assert
+        self.assertDictEqual(result, {'env1': 'val1'})
+
+    def test_get_environment_variables_dict_raises_when_wrong_pattern(self):
+        # arrange
+        environment_variables_str = 'env1 : val1'
+
+        # act & assert
+        with self.assertRaisesRegexp(ValueError,
+                                     "Cannot parse environment variable 'env1 : val1'. Expected format: key=value"):
+            self.deployment_operation._get_environment_variables_dict(
+                logger=Mock(),
+                environment_variables=environment_variables_str)
+
+    def test_get_environment_variables_returns_none_for_empty_string(self):
+        # arrange
+        environment_variables_str = ' '
+
+        # act
+        result = self.deployment_operation._get_environment_variables_dict(
+            logger=Mock(),
+            environment_variables=environment_variables_str)
+
+        # assert
+        self.assertEquals(result, None)
