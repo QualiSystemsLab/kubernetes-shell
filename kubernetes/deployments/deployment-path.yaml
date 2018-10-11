@@ -39,6 +39,31 @@ node_types:
         default: 1
         description:
         tags: [user_input]
+      Start Command:
+        type: string
+        description:
+        tags: [user_input]
+      Environment Variables:
+        type: string
+        description: Comma separated list of 'key=value' environment variables
+        tags: [user_input]
+      CPU Request:
+        type: string
+        description:
+        # tags: [user_input]
+      RAM Request:
+        type: string
+        description:
+        # tags: [user_input]
+
+      CPU Limit:
+        type: string
+        description:
+        # tags: [user_input]
+      RAM Limit:
+        type: string
+        description:
+        # tags: [user_input]
 
       Wait for IP:
         type: boolean

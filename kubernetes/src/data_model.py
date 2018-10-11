@@ -418,6 +418,111 @@ class KubernetesService(object):
         self.attributes['Kubernetes.Kubernetes Service.Replicas'] = value
 
     @property
+    def start_command(self):
+        """
+        :rtype: str
+        """
+        return self.attributes['Kubernetes.Kubernetes Service.Start Command'] if 'Kubernetes.Kubernetes Service.Start Command' in self.attributes else None
+
+    @start_command.setter
+    def start_command(self, value):
+        """
+        
+        :type value: str
+        """
+        self.attributes['Kubernetes.Kubernetes Service.Start Command'] = value
+
+    @property
+    def environment_variables(self):
+        """
+        :rtype: str
+        """
+        return self.attributes['Kubernetes.Kubernetes Service.Environment Variables'] if 'Kubernetes.Kubernetes Service.Environment Variables' in self.attributes else None
+
+    @environment_variables.setter
+    def environment_variables(self, value):
+        """
+        Comma separated list of 'key=value' environment variables
+        :type value: str
+        """
+        self.attributes['Kubernetes.Kubernetes Service.Environment Variables'] = value
+
+    @property
+    def cpu_request(self):
+        """
+        :rtype: str
+        """
+        return self.attributes['Kubernetes.Kubernetes Service.CPU Request'] if 'Kubernetes.Kubernetes Service.CPU Request' in self.attributes else None
+
+    @cpu_request.setter
+    def cpu_request(self, value):
+        """
+        
+        :type value: str
+        """
+        self.attributes['Kubernetes.Kubernetes Service.CPU Request'] = value
+
+    @property
+    def ram_request(self):
+        """
+        :rtype: str
+        """
+        return self.attributes['Kubernetes.Kubernetes Service.RAM Request'] if 'Kubernetes.Kubernetes Service.RAM Request' in self.attributes else None
+
+    @ram_request.setter
+    def ram_request(self, value):
+        """
+        
+        :type value: str
+        """
+        self.attributes['Kubernetes.Kubernetes Service.RAM Request'] = value
+
+    @property
+    def cpu_limit(self):
+        """
+        :rtype: str
+        """
+        return self.attributes['Kubernetes.Kubernetes Service.CPU Limit'] if 'Kubernetes.Kubernetes Service.CPU Limit' in self.attributes else None
+
+    @cpu_limit.setter
+    def cpu_limit(self, value):
+        """
+        
+        :type value: str
+        """
+        self.attributes['Kubernetes.Kubernetes Service.CPU Limit'] = value
+
+    @property
+    def ram_limit(self):
+        """
+        :rtype: str
+        """
+        return self.attributes['Kubernetes.Kubernetes Service.RAM Limit'] if 'Kubernetes.Kubernetes Service.RAM Limit' in self.attributes else None
+
+    @ram_limit.setter
+    def ram_limit(self, value):
+        """
+        
+        :type value: str
+        """
+        self.attributes['Kubernetes.Kubernetes Service.RAM Limit'] = value
+
+    @property
+    def wait_for_ip(self):
+        """
+        :rtype: bool
+        """
+        return self.attributes['Kubernetes.Kubernetes Service.Wait for IP'] if 'Kubernetes.Kubernetes Service.Wait for IP' in self.attributes else None
+
+    @wait_for_ip.setter
+    def wait_for_ip(self, value=False):
+        """
+        if set to false the deployment will not wait for the VM to get an IP address
+        :type value: bool
+        """
+        self.attributes['Kubernetes.Kubernetes Service.Wait for IP'] = value
+
+    @property
     def autoload(self):
         """
         :rtype: bool
@@ -431,21 +536,6 @@ class KubernetesService(object):
         :type value: bool
         """
         self.attributes['Kubernetes.Kubernetes Service.Autoload'] = value
-
-    @property
-    def wait_for_ip(self):
-        """
-        :rtype: bool
-        """
-        return self.attributes['Kubernetes.Kubernetes Service.Wait for IP'] if 'Kubernetes.Kubernetes Service.Wait for IP' in self.attributes else None
-
-    @wait_for_ip.setter
-    def wait_for_ip(self, value=True):
-        """
-        if set to false the deployment will not wait for the VM to get an IP address
-        :type value: bool
-        """
-        self.attributes['Kubernetes.Kubernetes Service.Wait for IP'] = value
 
     @property
     def name(self):

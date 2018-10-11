@@ -62,9 +62,11 @@ class KubernetesDeploymentService:
         # self.set_apps_debugging_protocols([app_request], annotations)
         template_meta = V1ObjectMeta(labels=labels, annotations=annotations)
 
-        container = self._prepare_app_container(image=app.image,
+        container = self._prepare_app_container(name=app.name,
+                                                image=app.image,
+                                                start_command=app.start_command,
+                                                environment_variables=app.environment_variables,
                                                 compute_spec=app.compute_spec,
-                                                name=app.name,
                                                 internal_ports=app.internal_ports,
                                                 external_ports=app.external_ports)
 
@@ -82,8 +84,11 @@ class KubernetesDeploymentService:
                                                              pretty='true')
 
     @staticmethod
-    def _prepare_app_container(image, compute_spec, name, internal_ports, external_ports):
+    def _prepare_app_container(name, image, start_command, environment_variables, compute_spec, internal_ports,
+                               external_ports):
         """
+        :param str start_command:
+        :param Dict[str, str] environment_variables:
         :param ApplicationImage image:
         :param AppComputeSpecKubernetes compute_spec:
         :param str name:
@@ -101,9 +106,9 @@ class KubernetesDeploymentService:
             container_ports.append(V1ContainerPort(name='{}{}'.format(TagsService.EXTERNAL_PORT_PREFIX, port),
                                                    container_port=port))
 
-        # env_list = [V1EnvVar(name=i.name, value=i.value) for i in inputs] if inputs else []
-        # env_list.append(V1EnvVar(name="SANDBOX_ID", value=namespace))
-        #
+        env_list = [V1EnvVar(name=key, value=value) for key, value in environment_variables.iteritems()] \
+            if environment_variables else []
+
         # user_data_str = KubernetesDeploymentService._get_user_data(
         #     name=name,
         #     start_command=start_command,
@@ -113,8 +118,11 @@ class KubernetesDeploymentService:
         #     start_command_script_name=start_command_script_name,
         #     has_artifacts=has_artifacts)
 
-        command = ['/bin/bash', '-c', '--']
-        args = ["while true; do sleep 30; done;"]  # run a task that will never finish
+        command = None
+        args = None
+        if start_command:
+            command = ['/bin/bash', '-c', '--']
+            args = [start_command]  # ["while true; do sleep 30; done;"]  # run a task that will never finish
 
         if image.tag == 'latest' or image.tag == '':
             full_image_name = image.name
@@ -138,15 +146,15 @@ class KubernetesDeploymentService:
                                resources=resources,
                                command=command,
                                args=args,
-                               ports=container_ports)
-            # env=env_list)
+                               ports=container_ports,
+                               env=env_list)
         else:
             return V1Container(name=name,
                                image=full_image_name,
                                command=command,
                                args=args,
-                               ports=container_ports)
-            # env=env_list)
+                               ports=container_ports,
+                               env=env_list)
 
     def wait_until_exists(self, logger, clients, namespace, app_name, delay=10, timeout=600):
         """
