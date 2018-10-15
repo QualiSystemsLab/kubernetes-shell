@@ -90,7 +90,7 @@ class DeployOperation(object):
                                            labels=deployment_labels,
                                            app=deployment_request)
 
-        additional_data = self._create_additional_data(namespace, replicas)
+        additional_data = self._create_additional_data(namespace, replicas, deployment_model.wait_for_replicas)
 
         # prepare result
         return DeployAppResult(deploy_action.actionId,
@@ -113,15 +113,17 @@ class DeployOperation(object):
             raise ValueError("The number of replicas for the application must be 1 or greater")
         return replicas
 
-    def _create_additional_data(self, namespace, replicas):
+    def _create_additional_data(self, namespace, replicas, wait_for_replicas_to_be_ready):
         """
         :param str namespace:
         :param int replicas:
+        :param int wait_for_replicas_to_be_ready
         :rtype: Dict
         """
         return {
             DeployedAppAdditionalDataKeys.NAMESPACE: namespace,
-            DeployedAppAdditionalDataKeys.REPLICAS: replicas
+            DeployedAppAdditionalDataKeys.REPLICAS: replicas,
+            DeployedAppAdditionalDataKeys.WAIT_FOR_REPLICAS_TO_BE_READY: wait_for_replicas_to_be_ready
         }
 
     def _get_environment_variables_dict(self, logger, environment_variables):

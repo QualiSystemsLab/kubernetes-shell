@@ -156,6 +156,48 @@ class KubernetesDeploymentService:
                                ports=container_ports,
                                env=env_list)
 
+    def wait_until_all_replicas_ready(self, logger, clients, namespace, app_name, deployed_app_name,
+                                      delay=10, timeout=120):
+        """
+        :param Logger logger:
+        :param KubernetesClients clients:
+        :param str namespace:
+        :param str app_name:
+        :param str deployed_app_name:
+        :param int delay:
+        :param int timeout:
+        :return:
+        """
+        start_time = time.time()
+        while True:
+            deployment = self.get_deployment_by_name(clients, namespace, app_name)
+
+            if not deployment:
+                raise ValueError('Something went wrong. Deployment {} not found.')
+
+            # check if all replicas are ready
+            if deployment.status.replicas == deployment.status.ready_replicas:
+                # all replicas are ready - success
+                return
+
+            if time.time() - start_time >= timeout:
+                try:
+                    query_selector = self._prepare_deployment_default_label_selector(app_name)
+                    pods = clients.core_api.list_namespaced_pod(namespace=namespace, label_selector=query_selector).items
+                    logger.error("Deployment dump:")
+                    logger.error(str(deployment))
+                    logger.error("Pods dump:")
+                    logger.error(str(pods))
+                except:
+                    logger.exception("Failed to get more data about pods and deployment for deployed app {}"
+                                     .format(deployed_app_name))
+
+                raise TimeoutError('Timeout waiting for {} replicas to be ready for deployed app {}. '
+                                   'Please look at the logs for more information'
+                                   .format(deployment.status.replicas, deployed_app_name))
+
+            time.sleep(delay)
+
     def wait_until_exists(self, logger, clients, namespace, app_name, delay=10, timeout=600):
         """
         Waits until the deployment called 'app_name' exists in Kubernetes regardless of state

@@ -56,3 +56,16 @@ class DeployedAppResource(object):
             raise ValueError("Something went wrong. Couldn't parse replicas value {replicas} from custom params data "
                              "for deployed app '{deployed_app}' "
                              .format(deployed_app=self._resource.name, replicas=replicas_str))
+
+    @property
+    def wait_for_replicas_to_be_ready(self):
+        """
+        :rtype: int
+        """
+        wait_for_replicas = get_custom_params_value(self.vm_custom_params,
+                                                    DeployedAppAdditionalDataKeys.WAIT_FOR_REPLICAS_TO_BE_READY)
+        if not wait_for_replicas:
+            return 0
+
+        return int(wait_for_replicas)
+
