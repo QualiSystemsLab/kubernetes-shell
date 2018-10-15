@@ -42,7 +42,8 @@ class TestDeployOperation(unittest.TestCase):
             'Kubernetes.Kubernetes Service.Docker Image Name': 'Ubuntu',
             'Kubernetes.Kubernetes Service.Docker Image Tag': '16.04',
             'Kubernetes.Kubernetes Service.Start Command': 'do stuff',
-            'Kubernetes.Kubernetes Service.Environment Variables': 'k1=v1'
+            'Kubernetes.Kubernetes Service.Environment Variables': 'k1=v1',
+            'Kubernetes.Kubernetes Service.Wait for Replicas': '120'
         }
 
         internal_service_mock = Mock()
@@ -97,8 +98,10 @@ class TestDeployOperation(unittest.TestCase):
         self.assertEquals(result.vmUuid, expected_kubernetes_app_name)
         self.assertEquals(result.vmName, self.deploy_action.actionParams.appName)
         self.assertEquals(result.deployedAppAddress, expected_kubernetes_app_name)
-        self.assertDictEqual(result.deployedAppAdditionalData, {DeployedAppAdditionalDataKeys.NAMESPACE: namespace,
-                                                                DeployedAppAdditionalDataKeys.REPLICAS: 3})
+        self.assertDictEqual(result.deployedAppAdditionalData,
+                             {DeployedAppAdditionalDataKeys.NAMESPACE: namespace,
+                              DeployedAppAdditionalDataKeys.REPLICAS: 3,
+                              DeployedAppAdditionalDataKeys.WAIT_FOR_REPLICAS_TO_BE_READY: '120'})
 
     @patch('domain.operations.deploy.create_deployment_model_from_action')
     def test_deploy_raises_when_no_namespace(self, create_deployment_model_from_action):

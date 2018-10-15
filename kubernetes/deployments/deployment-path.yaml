@@ -55,6 +55,10 @@ node_types:
         type: string
         description:
         # tags: [user_input]
+      Wait for Replicas:
+        type: integer
+        default: 120
+        description: Wait X number of seconds during power on for all replicas to be in ready state. When the value is zero or less the shell will not wait for replicas to be ready.
 
       CPU Limit:
         type: string

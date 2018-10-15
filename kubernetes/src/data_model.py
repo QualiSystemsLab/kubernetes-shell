@@ -478,6 +478,21 @@ class KubernetesService(object):
         self.attributes['Kubernetes.Kubernetes Service.RAM Request'] = value
 
     @property
+    def wait_for_replicas(self):
+        """
+        :rtype: float
+        """
+        return self.attributes['Kubernetes.Kubernetes Service.Wait for Replicas'] if 'Kubernetes.Kubernetes Service.Wait for Replicas' in self.attributes else None
+
+    @wait_for_replicas.setter
+    def wait_for_replicas(self, value='120'):
+        """
+        Wait X number of seconds during power on for all replicas to be in ready state. Value must be greater than zero.
+        :type value: float
+        """
+        self.attributes['Kubernetes.Kubernetes Service.Wait for Replicas'] = value
+
+    @property
     def cpu_limit(self):
         """
         :rtype: str

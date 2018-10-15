@@ -33,9 +33,21 @@ class PowerOperation(object):
                                                   app_name=deployed_app.kubernetes_name,
                                                   updated_deployment=deployment)
 
-        logger.info("App {}({}) powered on. Replicas count set to {}".format(deployed_app.cloudshell_resource_name,
-                                                                             deployed_app.kubernetes_name,
-                                                                             str(deployed_app.replicas)))
+        logger.info("Replicas number set to {} for app {}".format(str(deployed_app.replicas),
+                                                                  deployed_app.cloudshell_resource_name))
+
+        if deployed_app.wait_for_replicas_to_be_ready > 0:
+            logger.info("Waiting for all replicas of app {} to be ready. Timeout set to: {}"
+                        .format(deployed_app.cloudshell_resource_name, str(deployed_app.wait_for_replicas_to_be_ready)))
+            self.deployment_service.wait_until_all_replicas_ready(
+                logger=logger,
+                clients=clients,
+                namespace=deployed_app.namespace,
+                app_name=deployed_app.kubernetes_name,
+                deployed_app_name=deployed_app.cloudshell_resource_name,
+                timeout=deployed_app.wait_for_replicas_to_be_ready)
+
+        logger.info("App {} powered on.".format(deployed_app.cloudshell_resource_name))
 
     def power_off(self, logger, clients, deployed_app):
         """
@@ -59,5 +71,3 @@ class PowerOperation(object):
 
         logger.info("App {}({}) powered off. Replicas count set to 0".format(deployed_app.cloudshell_resource_name,
                                                                              deployed_app.kubernetes_name))
-
-
