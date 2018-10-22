@@ -32,9 +32,13 @@ class KubernetesNetworkingService(object):
         :rtype: List[V1Service]
         """
 
+        # add app label selector so we can find the services of an app using a single query
+        service_labels = dict(labels)
+        service_labels.update({TagsService.SERVICE_APP_NAME: name})
+
         services = list()
         if internal_ports:
-            internal_service_labels = dict(labels)
+            internal_service_labels = dict(service_labels)
             internal_service_labels.update({TagsService.INTERNAL_SERVICE: 'true'})
             service = self._create(logger=logger,
                                    core_v1_api=clients.core_api,
@@ -48,7 +52,7 @@ class KubernetesNetworkingService(object):
             logger.info('Created internal service for app {}'.format(name))
 
         if external_ports:
-            external_service_labels = dict(labels)
+            external_service_labels = dict(service_labels)
             external_service_labels.update({TagsService.EXTERNAL_SERVICE: 'true'})
             service_name = self._format_external_service_name(name)
             service = self._create(logger=logger,
@@ -102,6 +106,7 @@ class KubernetesNetworkingService(object):
         :rtype: V1Service
         """
         annotations = {}  # todo add annotations to services
+
         meta = V1ObjectMeta(name=name, labels=labels, annotations=annotations)
         service_ports = list()
 
@@ -126,12 +131,29 @@ class KubernetesNetworkingService(object):
                                                      body=service,
                                                      pretty='true')
 
+    def _get_service_app_name_selector(self, app_name):
+        query_selector = "{selector}=={app_name}".format(
+            selector=TagsService.SERVICE_APP_NAME,
+            app_name=app_name)
+        return query_selector
+
     def get_all(self, clients):
         """
         :param model.clients.KubernetesClients clients:
         :rtype: V1ServiceList
         """
         return clients.core_api.list_service_for_all_namespaces(label_selector=TagsService.SANDBOX_ID)
+
+    def get_services_by_app_name(self, clients, namespace, app_name):
+        """
+        :param str namespace:
+        :param KubernetesClients clients:
+        :param str app_name:
+        :rtype: List[V1Service]
+        """
+        selector_tag = self._get_service_app_name_selector(app_name)
+        return clients.core_api.list_namespaced_service(namespace=namespace,
+                                                        label_selector=selector_tag).items
 
     def filter_by_label(self, clients, filter_query):
         """

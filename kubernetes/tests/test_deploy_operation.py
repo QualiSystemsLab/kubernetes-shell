@@ -22,7 +22,8 @@ class TestDeployOperation(unittest.TestCase):
         self.deployment_service = Mock()
         self.deployment_operation = DeployOperation(networking_service=self.networking_service,
                                                     namespace_service=self.namespace_service,
-                                                    deployment_service=self.deployment_service)
+                                                    deployment_service=self.deployment_service,
+                                                    vm_details_provider=None)
 
     @patch('domain.operations.deploy.ApplicationImage')
     @patch('domain.operations.deploy.AppDeploymentRequest')

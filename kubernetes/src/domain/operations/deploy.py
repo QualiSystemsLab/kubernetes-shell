@@ -10,6 +10,7 @@ import data_model
 from domain.services.networking import KubernetesNetworkingService
 from domain.services.namespace import KubernetesNamespaceService
 from domain.services.deployment import KubernetesDeploymentService
+from domain.services.vm_details import VmDetailsProvider
 from logging import Logger
 from typing import Dict
 
@@ -17,12 +18,14 @@ from model.deployment_requests import AppDeploymentRequest, ApplicationImage
 
 
 class DeployOperation(object):
-    def __init__(self, networking_service, namespace_service, deployment_service):
+    def __init__(self, networking_service, namespace_service, deployment_service, vm_details_provider):
         """
+        :param VmDetailsProvider vm_details_provider:
         :param KubernetesNetworkingService networking_service:
         :param KubernetesNamespaceService namespace_service:
-        :param KubernetesDeploymentService deployment_service
+        :param KubernetesDeploymentService deployment_service:
         """
+        self.vm_details_provider = vm_details_provider
         self.networking_service = networking_service
         self.namespace_service = namespace_service
         self.deployment_service = deployment_service
@@ -83,12 +86,14 @@ class DeployOperation(object):
                                                   external_ports=external_ports,
                                                   replicas=replicas)
 
-        self.deployment_service.create_app(logger=logger,
-                                           clients=clients,
-                                           namespace=namespace,
-                                           name=kubernetes_app_name,
-                                           labels=deployment_labels,
-                                           app=deployment_request)
+        created_deplomyent = self.deployment_service.create_app(logger=logger,
+                                                                clients=clients,
+                                                                namespace=namespace,
+                                                                name=kubernetes_app_name,
+                                                                labels=deployment_labels,
+                                                                app=deployment_request)
+
+        vm_details = self.vm_details_provider.create_vm_details(created_services, created_deplomyent)
 
         additional_data = self._create_additional_data(namespace, replicas, deployment_model.wait_for_replicas)
 
@@ -96,6 +101,7 @@ class DeployOperation(object):
         return DeployAppResult(deploy_action.actionId,
                                vmUuid=kubernetes_app_name,
                                vmName=deploy_action.actionParams.appName,
+                               vmDetailsData=vm_details,
                                deployedAppAdditionalData=additional_data,
                                deployedAppAddress=kubernetes_app_name)  # todo - what address to use here?
 

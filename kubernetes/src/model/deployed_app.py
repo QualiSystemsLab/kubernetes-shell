@@ -7,20 +7,23 @@ from domain.common.utils import get_custom_params_value
 
 
 class DeployedAppResource(object):
-    def __init__(self, resource_context):
+    def __init__(self, resource_context=None, deployed_app_dict=None):
         """
         :param ResourceContextDetails resource_context:
         """
-        self._resource = resource_context
+        if resource_context:
+            # self.app_request_dict = json.loads(resource_context.app_context.app_request_json)
+            self.deployed_app_dict = json.loads(resource_context.app_context.deployed_app_json)
 
-        self.app_request_json = json.loads(self._resource.app_context.app_request_json)
-        self.deployed_app_dict = json.loads(self._resource.app_context.deployed_app_json)
+        elif deployed_app_dict:
+            self.deployed_app_dict = deployed_app_dict
+
         self.vm_details = self.deployed_app_dict['vmdetails']
         self.vm_custom_params = self.vm_details['vmCustomParams']
 
     @property
     def cloudshell_resource_name(self):
-        return self._resource.name
+        return self.deployed_app_dict['name']
 
     @property
     def kubernetes_name(self):
@@ -35,7 +38,7 @@ class DeployedAppResource(object):
                                             DeployedAppAdditionalDataKeys.NAMESPACE)
         if not namespace:
             raise ValueError("Something went wrong. Couldn't get namespace from custom params for deployed app '{}'"
-                             .format(self._resource.name))
+                             .format(self.cloudshell_resource_name))
 
         return namespace
 
@@ -48,14 +51,14 @@ class DeployedAppResource(object):
                                                DeployedAppAdditionalDataKeys.REPLICAS)
         if not replicas_str:
             raise ValueError("Something went wrong. Couldn't get replicas from custom params for deployed app '{}'"
-                             .format(self._resource.name))
+                             .format(self.cloudshell_resource_name))
 
         try:
             return int(replicas_str)
         except:
             raise ValueError("Something went wrong. Couldn't parse replicas value {replicas} from custom params data "
                              "for deployed app '{deployed_app}' "
-                             .format(deployed_app=self._resource.name, replicas=replicas_str))
+                             .format(deployed_app=self.cloudshell_resource_name, replicas=replicas_str))
 
     @property
     def wait_for_replicas_to_be_ready(self):
