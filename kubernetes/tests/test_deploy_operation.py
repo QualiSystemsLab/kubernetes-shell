@@ -20,10 +20,11 @@ class TestDeployOperation(unittest.TestCase):
         self.networking_service = Mock()
         self.namespace_service = Mock()
         self.deployment_service = Mock()
+        self.vm_details_provider = Mock()
         self.deployment_operation = DeployOperation(networking_service=self.networking_service,
                                                     namespace_service=self.namespace_service,
                                                     deployment_service=self.deployment_service,
-                                                    vm_details_provider=None)
+                                                    vm_details_provider=self.vm_details_provider)
 
     @patch('domain.operations.deploy.ApplicationImage')
     @patch('domain.operations.deploy.AppDeploymentRequest')
@@ -33,6 +34,9 @@ class TestDeployOperation(unittest.TestCase):
         namespace_obj = Mock()
         namespace = namespace_obj.metadata.name
         self.namespace_service.get_single_by_id = Mock(return_value=namespace_obj)
+
+        vm_details_data_mock = Mock()
+        self.vm_details_provider.create_vm_details = Mock(return_value=vm_details_data_mock)
 
         self.deploy_action.actionParams.appName = "kube app test"
         self.deploy_action.actionParams.deployment.deploymentPath = 'Kubernetes.Kubernetes Service'
@@ -103,6 +107,7 @@ class TestDeployOperation(unittest.TestCase):
                              {DeployedAppAdditionalDataKeys.NAMESPACE: namespace,
                               DeployedAppAdditionalDataKeys.REPLICAS: 3,
                               DeployedAppAdditionalDataKeys.WAIT_FOR_REPLICAS_TO_BE_READY: '120'})
+        self.assertEquals(result.vmDetailsData, vm_details_data_mock)
 
     @patch('domain.operations.deploy.create_deployment_model_from_action')
     def test_deploy_raises_when_no_namespace(self, create_deployment_model_from_action):
