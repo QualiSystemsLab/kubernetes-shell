@@ -176,7 +176,7 @@ class KubernetesDeploymentService:
                 raise ValueError('Something went wrong. Deployment {} not found.')
 
             # check if all replicas are ready
-            if deployment.status.replicas == deployment.status.ready_replicas:
+            if deployment.spec.replicas == deployment.status.ready_replicas:
                 # all replicas are ready - success
                 return
 
@@ -240,7 +240,7 @@ class KubernetesDeploymentService:
             name=app_name,
             namespace=namespace,
             body=updated_deployment)
-        logger.info("Deployment {} in ns/{} updated. Status='{}'".format(app_name, namespace, str(api_response.status)))
+        logger.debug("Deployment {} in ns/{} updated. Status='{}'".format(app_name, namespace, str(api_response.status)))
 
     def get_deployment_by_name(self, clients, namespace, app_name):
         """

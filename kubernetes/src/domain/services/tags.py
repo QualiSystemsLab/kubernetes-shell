@@ -17,6 +17,7 @@ class TagsService(object):
     # SERVICES
     INTERNAL_SERVICE = get_provider_tag_name("internal-service")
     EXTERNAL_SERVICE = get_provider_tag_name("external-service")
+    SERVICE_APP_NAME = get_provider_tag_name("service-app-name")
     EXTERNAL_SERVICE_POSTFIX = 'external'
 
     @staticmethod

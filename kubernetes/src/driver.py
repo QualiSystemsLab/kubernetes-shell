@@ -1,3 +1,5 @@
+import json
+
 from cloudshell.core.context.error_handling_context import ErrorHandlingContext
 from cloudshell.cp.core import DriverRequestParser
 from cloudshell.cp.core.models import DriverResponse, DeployApp, CleanupNetwork
@@ -14,10 +16,12 @@ from domain.operations.delete import DeleteInstanceOperation
 from domain.operations.deploy import DeployOperation
 from domain.operations.power import PowerOperation
 from domain.operations.prepare import PrepareSandboxInfraOperation
+from domain.operations.vm_details import VmDetialsOperation
 from domain.services.clients import ApiClientsProvider
 from domain.services.deployment import KubernetesDeploymentService
 from domain.services.namespace import KubernetesNamespaceService
 from domain.services.networking import KubernetesNetworkingService
+from domain.services.vm_details import VmDetailsProvider
 from model.deployed_app import DeployedAppResource
 
 
@@ -34,17 +38,21 @@ class KubernetesDriver(ResourceDriverInterface):
         self.networking_service = KubernetesNetworkingService()
         self.namespace_service = KubernetesNamespaceService()
         self.deployment_service = KubernetesDeploymentService()
+        self.vm_details_provider = VmDetailsProvider()
 
         # operations
         self.autoload_operation = AutolaodOperation(api_clients_provider=self.api_clients_provider)
         self.deploy_operation = DeployOperation(self.networking_service,
                                                 self.namespace_service,
-                                                self.deployment_service)
+                                                self.deployment_service,
+                                                self.vm_details_provider)
         self.prepare_operation = PrepareSandboxInfraOperation(self.namespace_service)
         self.cleanup_operation = CleanupSandboxInfraOperation(self.namespace_service)
         self.delete_instance_operation = DeleteInstanceOperation(self.networking_service,
                                                                  self.deployment_service)
         self.power_operation = PowerOperation(self.deployment_service)
+        self.vm_details_operation = VmDetialsOperation(self.networking_service, self.deployment_service,
+                                                       self.vm_details_provider)
 
     def initialize(self, context):
         """
@@ -157,7 +165,21 @@ class KubernetesDriver(ResourceDriverInterface):
         :param CancellationContext cancellation_context:
         :return:
         """
-        pass
+        with LoggingSessionContext(context) as logger, ErrorHandlingContext(logger):
+            logger.info('GetVmDetails_context:')
+            logger.info(context)
+            logger.info('GetVmDetails_requests')
+            logger.info(requests)
+
+            cloud_provider_resource = data_model.Kubernetes.create_from_context(context)
+            clients = self.api_clients_provider.get_api_clients(cloud_provider_resource.cluster_name)
+            items_json = json.loads(requests)
+
+            result = self.vm_details_operation.create_vm_details_bulk(logger, clients, items_json)
+
+            result_json = json.dumps(result, default=lambda o: o.__dict__, sort_keys=True, separators=(',', ':'))
+
+            return result_json
 
     def remote_refresh_ip(self, context, ports, cancellation_context):
         """

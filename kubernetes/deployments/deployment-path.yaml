@@ -71,7 +71,7 @@ node_types:
 
       Wait for IP:
         type: boolean
-        default: False
+        default: True
 
 
     #    ## custom attributes example for deployment option
