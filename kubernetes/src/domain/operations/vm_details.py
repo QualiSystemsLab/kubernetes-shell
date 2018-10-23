@@ -27,6 +27,9 @@ class VmDetialsOperation(object):
         :param Dict items:
         :return:
         """
+
+        logger.info('Creating vm details for {} vms'.format(len(items)))
+
         result = []
         for item in items['items']:
             deployed_app = DeployedAppResource(deployed_app_dict=item['deployedAppJson'])
@@ -44,5 +47,6 @@ class VmDetialsOperation(object):
                                                           deployment=deployment,
                                                           deployed_app=deployed_app,
                                                           deploy_app_name=deployed_app.cloudshell_resource_name))
+            logger.info('Created vm details for {}'.format(deployed_app.cloudshell_resource_name))
 
         return result
