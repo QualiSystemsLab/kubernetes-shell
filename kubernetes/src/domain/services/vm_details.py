@@ -19,13 +19,10 @@ class VmDetailsProvider(object):
         :param str deploy_app_name:
         :return:
         """
-
         vm_instance_data = self._get_vm_instance_data(services, deployment, deployed_app)
-        # vm_network_data = self._get_vm_network_data(instance)
-        vm_network_data = None
 
         return VmDetailsData(vmInstanceData=vm_instance_data,
-                             vmNetworkData=vm_network_data,
+                             vmNetworkData=None,
                              appName=deploy_app_name)
 
     def _get_vm_instance_data(self, services, deployment, deployed_app):
@@ -36,11 +33,7 @@ class VmDetailsProvider(object):
         :return:
         """
 
-        internal_service = \
-            first_or_default(services, lambda x: x.metadata.labels.get(TagsService.INTERNAL_SERVICE, False))
-
-        external_service = \
-            first_or_default(services, lambda x: x.metadata.labels.get(TagsService.EXTERNAL_SERVICE, False))
+        internal_service, external_service = self._get_internal_external_services_set(services)
 
         data = [VmDetailsProperty(key='Image', value=self._get_image(deployment)),
                 VmDetailsProperty(key='Replicas', value=self._get_replicas(deployment, deployed_app)),
@@ -50,8 +43,20 @@ class VmDetailsProvider(object):
                 VmDetailsProperty(key='External IP', value=self._get_external_ip(external_service)),
                 VmDetailsProperty(key='External Ports', value=self._get_service_ports(external_service)),
                 ]
-        # deployment.metadata.namespace
+
         return data
+
+    def _get_internal_external_services_set(self, services):
+        if services:
+            internal_service = \
+                first_or_default(services, lambda x: x.metadata.labels.get(TagsService.INTERNAL_SERVICE, False))
+
+            external_service = \
+                first_or_default(services, lambda x: x.metadata.labels.get(TagsService.EXTERNAL_SERVICE, False))
+
+            return internal_service, external_service
+
+        return None, None
 
     def _get_internal_ip(self, internal_service):
         if internal_service:
@@ -82,4 +87,4 @@ class VmDetailsProvider(object):
 
     def _get_image(self, deployment):
         images = list(set([c.image for c in deployment.spec.template.spec.containers]))
-        return '; '.join(images)
+        return ', '.join(images)
