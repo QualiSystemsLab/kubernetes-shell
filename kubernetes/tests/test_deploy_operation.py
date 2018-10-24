@@ -172,3 +172,63 @@ class TestDeployOperation(unittest.TestCase):
 
         # assert
         self.assertEquals(result, None)
+
+    @patch('domain.operations.deploy.convert_to_int_list')
+    @patch('domain.operations.deploy.convert_app_name_to_valide_kubernetes_name')
+    @patch('domain.operations.deploy.create_deployment_model_from_action')
+    def test_deploy_calls_rollback_when_create_app_in_deployment_service_raises(self,
+                                                                                create_deployment_model_from_action_method,
+                                                                                convert_app_name_to_valide_kubernetes_name_method,
+                                                                                convert_to_int_list_method):
+        # arrange
+        self.networking_service.create_internal_external_set = Mock(return_value=MagicMock())
+        self.deployment_operation._do_rollback_safely = Mock()
+        self.deployment_service.create_app = Mock(side_effect=Exception('error in deployment'))
+        namespace_obj_mock = Mock()
+        self.namespace_service.get_single_by_id = Mock(return_value=namespace_obj_mock)
+        kubernetes_name_mock = Mock()
+        convert_app_name_to_valide_kubernetes_name_method.return_value = kubernetes_name_mock
+
+        # act
+        with self.assertRaisesRegexp(Exception, 'error in deployment'):
+            self.deployment_operation.deploy_app(logger=self.logger,
+                                                 sandbox_id=self.sandbox_id,
+                                                 cloud_provider_resource=self.cloud_provider_resource,
+                                                 deploy_action=self.deploy_action,
+                                                 clients=self.clients,
+                                                 cancellation_context=self.cancellation_context)
+
+        # assert
+        self.deployment_operation._do_rollback_safely.assert_called_once_with(
+            logger=self.logger,
+            clients=self.clients,
+            namespace=namespace_obj_mock.metadata.name,
+            cs_app_name=self.deploy_action.actionParams.appName,
+            kubernetes_app_name=kubernetes_name_mock)
+
+    def test_do_rollback_simple(self):
+        # act
+        self.deployment_operation._do_rollback_safely(logger=self.logger,
+                                                      clients=self.clients,
+                                                      namespace=Mock(),
+                                                      cs_app_name=Mock(),
+                                                      kubernetes_app_name=Mock())
+
+        # assert
+        self.networking_service.delete_internal_external_set.assert_called_once()
+        self.deployment_service.delete_app.assert_called_once()
+
+    def test_do_rollback_is_actually_safe(self):
+        # arrange
+        self.networking_service.delete_internal_external_set = Mock(side_effect=Exception())
+
+        # act
+        self.deployment_operation._do_rollback_safely(logger=self.logger,
+                                                      clients=self.clients,
+                                                      namespace=Mock(),
+                                                      cs_app_name=Mock(),
+                                                      kubernetes_app_name=Mock())
+
+        self.networking_service.delete_internal_external_set.assert_called_once()
+        self.deployment_service.delete_app.assert_not_called()
+        self.logger.error.assert_called_once()

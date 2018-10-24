@@ -1,3 +1,5 @@
+import traceback
+
 from cloudshell.cp.core.models import DeployApp, DeployAppResult
 from cloudshell.shell.core.driver_context import CancellationContext
 
@@ -54,56 +56,64 @@ class DeployOperation(object):
         internal_ports = convert_to_int_list(deployment_model.internal_ports)
         external_ports = convert_to_int_list(deployment_model.external_ports)
 
-        created_services = self.networking_service \
-            .create_internal_external_set(namespace=namespace,
-                                          name=kubernetes_app_name,
-                                          labels=dict(sandbox_tag),
-                                          internal_ports=internal_ports,
-                                          external_ports=external_ports,
-                                          clients=clients,
-                                          logger=logger)
+        try:
+            created_services = self.networking_service \
+                .create_internal_external_set(namespace=namespace,
+                                              name=kubernetes_app_name,
+                                              labels=dict(sandbox_tag),
+                                              internal_ports=internal_ports,
+                                              external_ports=external_ports,
+                                              clients=clients,
+                                              logger=logger)
 
-        deployment_labels = dict(sandbox_tag)
-        for created_service in created_services:
-            deployment_labels.update(created_service.spec.selector)
+            deployment_labels = dict(sandbox_tag)
+            for created_service in created_services:
+                deployment_labels.update(created_service.spec.selector)
 
-        image = ApplicationImage(deployment_model.docker_image_name,
-                                 deployment_model.docker_image_tag)
+            image = ApplicationImage(deployment_model.docker_image_name,
+                                     deployment_model.docker_image_tag)
 
-        compute_spec = None
-        # todo - alexaz - add 4 attributes: "cpu request", "ram request", "cpu limit" & "ram limit" and init
-        # AppComputeSpecKubernetes object accordingly
+            compute_spec = None
+            # todo - alexaz - add 4 attributes: "cpu request", "ram request", "cpu limit" & "ram limit" and init AppComputeSpecKubernetes object accordingly
 
-        replicas = self._get_and_validate_replicas_number(deployment_model)
-        environment_variables = self._get_environment_variables_dict(logger, deployment_model.environment_variables)
+            replicas = self._get_and_validate_replicas_number(deployment_model)
+            environment_variables = self._get_environment_variables_dict(logger, deployment_model.environment_variables)
 
-        deployment_request = AppDeploymentRequest(name=kubernetes_app_name,
-                                                  image=image,
-                                                  start_command=deployment_model.start_command,
-                                                  environment_variables=environment_variables,
-                                                  compute_spec=compute_spec,
-                                                  internal_ports=internal_ports,
-                                                  external_ports=external_ports,
-                                                  replicas=replicas)
+            deployment_request = AppDeploymentRequest(name=kubernetes_app_name,
+                                                      image=image,
+                                                      start_command=deployment_model.start_command,
+                                                      environment_variables=environment_variables,
+                                                      compute_spec=compute_spec,
+                                                      internal_ports=internal_ports,
+                                                      external_ports=external_ports,
+                                                      replicas=replicas)
 
-        created_deplomyent = self.deployment_service.create_app(logger=logger,
-                                                                clients=clients,
-                                                                namespace=namespace,
-                                                                name=kubernetes_app_name,
-                                                                labels=deployment_labels,
-                                                                app=deployment_request)
+            created_deplomyent = self.deployment_service.create_app(logger=logger,
+                                                                    clients=clients,
+                                                                    namespace=namespace,
+                                                                    name=kubernetes_app_name,
+                                                                    labels=deployment_labels,
+                                                                    app=deployment_request)
 
-        vm_details = self.vm_details_provider.create_vm_details(created_services, created_deplomyent)
+            vm_details = self.vm_details_provider.create_vm_details(created_services, created_deplomyent)
 
-        additional_data = self._create_additional_data(namespace, replicas, deployment_model.wait_for_replicas)
+            additional_data = self._create_additional_data(namespace, replicas, deployment_model.wait_for_replicas)
 
-        # prepare result
-        return DeployAppResult(deploy_action.actionId,
-                               vmUuid=kubernetes_app_name,
-                               vmName=deploy_action.actionParams.appName,
-                               vmDetailsData=vm_details,
-                               deployedAppAdditionalData=additional_data,
-                               deployedAppAddress=kubernetes_app_name)  # todo - what address to use here?
+            # prepare result
+            return DeployAppResult(deploy_action.actionId,
+                                   vmUuid=kubernetes_app_name,
+                                   vmName=deploy_action.actionParams.appName,
+                                   vmDetailsData=vm_details,
+                                   deployedAppAdditionalData=additional_data,
+                                   deployedAppAddress=kubernetes_app_name)  # todo - what address to use here?
+        except:
+            self._do_rollback_safely(logger=logger,
+                                     clients=clients,
+                                     namespace=namespace,
+                                     cs_app_name=deploy_action.actionParams.appName,
+                                     kubernetes_app_name=kubernetes_app_name)
+            # raise the original exception to log it properly
+            raise
 
     def _validate_namespace(self, namespace_obj, sandbox_id):
         if not namespace_obj:
@@ -154,3 +164,21 @@ class DeployOperation(object):
                 raise ValueError("Cannot parse environment variable '{}'. Expected format: key=value".format(env_str))
 
         return env_dict
+
+    def _do_rollback_safely(self, logger, clients, namespace, cs_app_name, kubernetes_app_name):
+        """
+        :param str cs_app_name: object
+        :param logging.Logger logger:
+        :param KubernetesClients clients:
+        :param str namespace:
+        :param str kubernetes_app_name:
+        :return:
+        """
+        logger.info('Doing rollback for app {} in ns/{}'.format(cs_app_name, namespace))
+
+        try:
+            self.networking_service.delete_internal_external_set(logger, clients, kubernetes_app_name, namespace)
+            self.deployment_service.delete_app(logger, clients, app_name_to_delete=kubernetes_app_name, namespace=namespace)
+        except:
+            logger.error('Failed to do rollback for app {} in ns/{}. Error:'
+                         .format(cs_app_name, namespace, traceback.format_exc()))
