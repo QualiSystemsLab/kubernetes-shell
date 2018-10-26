@@ -41,7 +41,7 @@ class VmDetailsProvider(object):
                 VmDetailsProperty(key='Internal IP', value=self._get_internal_ip(internal_service)),
                 VmDetailsProperty(key='Internal Ports', value=self._get_service_ports(internal_service)),
                 VmDetailsProperty(key='External IP', value=self._get_external_ip(external_service)),
-                VmDetailsProperty(key='External Ports', value=self._get_service_ports(external_service)),
+                VmDetailsProperty(key='External Ports', value=self._get_external_service_ports(external_service)),
                 ]
 
         return data
@@ -65,17 +65,32 @@ class VmDetailsProvider(object):
             return ''
 
     def _get_external_ip(self, external_service):
+        if not external_service:
+            return ''
+
         try:
             return ', '.join([x.ip for x in external_service.status.load_balancer.ingress])
         except:
             try:
-                return ', '.join([x.ip for x in external_service.spec.load_balancer_ip])
+                return ','.join([x.hostname for x in external_service.status.load_balancer.ingress])
             except:
-                return ''
+                try:
+                    return ', '.join([x.ip for x in external_service.spec.load_balancer_ip])
+                except:
+                    return ''
 
     def _get_service_ports(self, internal_service):
         if internal_service:
             return ', '.join([str(port.port) for port in internal_service.spec.ports])
+        else:
+            return ''
+
+    def _get_external_service_ports(self, external_service):
+        if external_service:
+            return ', '.join(
+                ['{port}:{node_port}'.format(port=str(port.port), node_port=str(port.node_port))
+                 if port.node_port and external_service.spec.type == 'NodePort' else str(port.port)
+                 for port in external_service.spec.ports])
         else:
             return ''
 

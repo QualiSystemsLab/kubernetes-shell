@@ -74,6 +74,7 @@ class TestDeployOperation(unittest.TestCase):
             labels={TagsService.SANDBOX_ID: self.sandbox_id},
             internal_ports=[5589, 5560, 22],
             external_ports=[80, 443],
+            external_service_type=self.cloud_provider_resource.external_service_type,
             clients=self.clients,
             logger=self.logger)
 

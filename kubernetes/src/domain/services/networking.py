@@ -13,15 +13,10 @@ class KubernetesNetworkingService(object):
     def __init__(self):
         pass
 
-    def create_internal_external_set(self,
-                                     logger,
-                                     clients,
-                                     namespace,
-                                     name,
-                                     labels,
-                                     internal_ports,
-                                     external_ports):
+    def create_internal_external_set(self, logger, clients, namespace, name, labels, internal_ports, external_ports,
+                                     external_service_type):
         """
+        :param str external_service_type:
         :param Logger logger:
         :param KubernetesClients clients:
         :param str namespace:
@@ -62,7 +57,7 @@ class KubernetesNetworkingService(object):
                                    app_name=name,
                                    labels=external_service_labels,
                                    ports=external_ports,
-                                   spec_type='LoadBalancer')
+                                   spec_type=external_service_type)
             services.append(service)
             logger.info('Created external service for app {}'.format(name))
 

@@ -63,6 +63,7 @@ class DeployOperation(object):
                                               labels=dict(sandbox_tag),
                                               internal_ports=internal_ports,
                                               external_ports=external_ports,
+                                              external_service_type=cloud_provider_resource.external_service_type,
                                               clients=clients,
                                               logger=logger)
 

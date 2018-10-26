@@ -39,6 +39,10 @@ node_types:
           Cluster Name:
             type: string
 
+          External Service Type:
+            type: string
+            default: LoadBalancer
+
 #          ## Attributes available from the cloud provider standard
 #          Region:
 #            type: string
@@ -64,11 +68,19 @@ node_types:
 #        type: string
 #        default:
 #        description: attribute description
+
     properties:
       Cluster Name:
         type: string
         default:
         description: The name of the Kubernetes cluster to use.
+
+      External Service Type:
+        type: string
+        default: LoadBalancer
+        description: The service type the shell will create for external services. LoadBalander type should be used when the Kuberentes cluster is hosted on a supported public cloud provider like GCP, AWS or Azure. Use NodePort when the cluster is self hosted.
+        constraints:
+          - valid_values: [LoadBalancer, NodePort]
 
     artifacts:
       icon:

@@ -170,6 +170,21 @@ class Kubernetes(object):
         self.attributes['Kubernetes.Cluster Name'] = value
 
     @property
+    def external_service_type(self):
+        """
+        :rtype: str
+        """
+        return self.attributes['Kubernetes.External Service Type'] if 'Kubernetes.External Service Type' in self.attributes else None
+
+    @external_service_type.setter
+    def external_service_type(self, value):
+        """
+        The service type the shell will create for external services. LoadBalander type should be used when the Kuberentes cluster is hosted on a supported public cloud provider like GCP, AWS or Azure. Use NodePort when the cluster is self hosted.
+        :type value: str
+        """
+        self.attributes['Kubernetes.External Service Type'] = value
+
+    @property
     def networking_type(self):
         """
         :rtype: str
@@ -487,7 +502,7 @@ class KubernetesService(object):
     @wait_for_replicas.setter
     def wait_for_replicas(self, value='120'):
         """
-        Wait X number of seconds during power on for all replicas to be in ready state. Value must be greater than zero.
+        Wait X number of seconds during power on for all replicas to be in ready state. When the value is zero or less the shell will not wait for replicas to be ready.
         :type value: float
         """
         self.attributes['Kubernetes.Kubernetes Service.Wait for Replicas'] = value
