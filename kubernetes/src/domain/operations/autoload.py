@@ -17,7 +17,7 @@ class AutolaodOperation(object):
         """
 
         # create api clients by cluster name
-        clients = self.api_clients_provider.get_api_clients(cloud_provider_resource.cluster_name)
+        clients = self.api_clients_provider.get_api_clients(cloud_provider_resource)
 
         # list nodes and make sure we have 1 or more nodes just to check authentication works
         nodes = clients.core_api.list_node(watch=False)

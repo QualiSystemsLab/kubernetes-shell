@@ -155,19 +155,19 @@ class Kubernetes(object):
         return 'Kubernetes'
 
     @property
-    def cluster_name(self):
+    def config_file_path(self):
         """
         :rtype: str
         """
-        return self.attributes['Kubernetes.Cluster Name'] if 'Kubernetes.Cluster Name' in self.attributes else None
+        return self.attributes['Kubernetes.Config File Path'] if 'Kubernetes.Config File Path' in self.attributes else None
 
-    @cluster_name.setter
-    def cluster_name(self, value):
+    @config_file_path.setter
+    def config_file_path(self, value):
         """
-        The name of the Kubernetes cluster to use.
+        Path to a standalone kubernetes config file containing all the relevant information for authentication. To get a portable config file run command 'kubectl config view --flatten'
         :type value: str
         """
-        self.attributes['Kubernetes.Cluster Name'] = value
+        self.attributes['Kubernetes.Config File Path'] = value
 
     @property
     def external_service_type(self):
@@ -177,7 +177,7 @@ class Kubernetes(object):
         return self.attributes['Kubernetes.External Service Type'] if 'Kubernetes.External Service Type' in self.attributes else None
 
     @external_service_type.setter
-    def external_service_type(self, value):
+    def external_service_type(self, value='LoadBalancer'):
         """
         The service type the shell will create for external services. LoadBalander type should be used when the Kuberentes cluster is hosted on a supported public cloud provider like GCP, AWS or Azure. Use NodePort when the cluster is self hosted.
         :type value: str

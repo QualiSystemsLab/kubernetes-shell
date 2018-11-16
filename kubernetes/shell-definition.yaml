@@ -36,7 +36,7 @@ node_types:
             type: string
             default: true
 
-          Cluster Name:
+          Config File Path:
             type: string
 
           External Service Type:
@@ -70,10 +70,10 @@ node_types:
 #        description: attribute description
 
     properties:
-      Cluster Name:
+      Config File Path:
         type: string
         default:
-        description: The name of the Kubernetes cluster to use.
+        description: Path to a standalone kubernetes config file containing all the relevant information for authentication. To get a portable config file run command 'kubectl config view --flatten'
 
       External Service Type:
         type: string
