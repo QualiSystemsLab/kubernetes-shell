@@ -102,7 +102,7 @@ class KubernetesDriver(ResourceDriverInterface):
             # deployment_name = deploy_action.actionParams.deployment.deploymentPath
 
             cloud_provider_resource = data_model.Kubernetes.create_from_context(context)
-            clients = self.api_clients_provider.get_api_clients(cloud_provider_resource.cluster_name)
+            clients = self.api_clients_provider.get_api_clients(cloud_provider_resource)
 
             deploy_result = self.deploy_operation.deploy_app(logger,
                                                              context.reservation.reservation_id,
@@ -120,7 +120,7 @@ class KubernetesDriver(ResourceDriverInterface):
         """
         with LoggingSessionContext(context) as logger, ErrorHandlingContext(logger):
             cloud_provider_resource = data_model.Kubernetes.create_from_context(context)
-            clients = self.api_clients_provider.get_api_clients(cloud_provider_resource.cluster_name)
+            clients = self.api_clients_provider.get_api_clients(cloud_provider_resource)
             deployed_app = DeployedAppResource(context.remote_endpoints[0])
 
             self.power_operation.power_on(logger, clients, deployed_app)
@@ -132,7 +132,7 @@ class KubernetesDriver(ResourceDriverInterface):
         """
         with LoggingSessionContext(context) as logger, ErrorHandlingContext(logger):
             cloud_provider_resource = data_model.Kubernetes.create_from_context(context)
-            clients = self.api_clients_provider.get_api_clients(cloud_provider_resource.cluster_name)
+            clients = self.api_clients_provider.get_api_clients(cloud_provider_resource)
             deployed_app = DeployedAppResource(context.remote_endpoints[0])
 
             self.power_operation.power_off(logger, clients, deployed_app)
@@ -148,7 +148,7 @@ class KubernetesDriver(ResourceDriverInterface):
         """
         with LoggingSessionContext(context) as logger, ErrorHandlingContext(logger):
             cloud_provider_resource = data_model.Kubernetes.create_from_context(context)
-            clients = self.api_clients_provider.get_api_clients(cloud_provider_resource.cluster_name)
+            clients = self.api_clients_provider.get_api_clients(cloud_provider_resource)
             deployed_app = DeployedAppResource(context.remote_endpoints[0])
 
             self.delete_instance_operation.delete_instance(logger=logger,
@@ -172,7 +172,7 @@ class KubernetesDriver(ResourceDriverInterface):
             logger.info(requests)
 
             cloud_provider_resource = data_model.Kubernetes.create_from_context(context)
-            clients = self.api_clients_provider.get_api_clients(cloud_provider_resource.cluster_name)
+            clients = self.api_clients_provider.get_api_clients(cloud_provider_resource)
             items_json = json.loads(requests)
 
             result = self.vm_details_operation.create_vm_details_bulk(logger, clients, items_json)
@@ -225,7 +225,7 @@ class KubernetesDriver(ResourceDriverInterface):
             actions = self.request_parser.convert_driver_request_to_actions(request)
 
             cloud_provider_resource = data_model.Kubernetes.create_from_context(context)
-            clients = self.api_clients_provider.get_api_clients(cloud_provider_resource.cluster_name)
+            clients = self.api_clients_provider.get_api_clients(cloud_provider_resource)
 
             action_results = self.prepare_operation.prepare(logger,
                                                             context.reservation.reservation_id,
@@ -247,7 +247,7 @@ class KubernetesDriver(ResourceDriverInterface):
             cleanup_action = single(actions, lambda x: isinstance(x, CleanupNetwork))
 
             cloud_provider_resource = data_model.Kubernetes.create_from_context(context)
-            clients = self.api_clients_provider.get_api_clients(cloud_provider_resource.cluster_name)
+            clients = self.api_clients_provider.get_api_clients(cloud_provider_resource)
 
             action_result = self.cleanup_operation.cleanup(logger,
                                                            clients,
