@@ -16,7 +16,8 @@ from domain.services.vm_details import VmDetailsProvider
 from logging import Logger
 from typing import Dict
 
-from model.deployment_requests import AppDeploymentRequest, ApplicationImage
+from model.deployment_requests import AppDeploymentRequest, ApplicationImage, AppComputeSpecKubernetes, \
+    AppComputeSpecKubernetesResources
 
 
 class DeployOperation(object):
@@ -74,9 +75,7 @@ class DeployOperation(object):
             image = ApplicationImage(deployment_model.docker_image_name,
                                      deployment_model.docker_image_tag)
 
-            compute_spec = None
-            # todo - alexaz - add 4 attributes: "cpu request", "ram request", "cpu limit" & "ram limit" and init AppComputeSpecKubernetes object accordingly
-
+            compute_spec = self._get_compute_spec(deployment_model)
             replicas = self._get_and_validate_replicas_number(deployment_model)
             environment_variables = self._get_environment_variables_dict(logger, deployment_model.environment_variables)
 
@@ -115,6 +114,20 @@ class DeployOperation(object):
                                      kubernetes_app_name=kubernetes_app_name)
             # raise the original exception to log it properly
             raise
+
+    def _get_compute_spec(self, deployment_model):
+        compute_spec = None
+        if deployment_model.cpu_limit or deployment_model.ram_limit or deployment_model.cpu_request or deployment_model.ram_request:
+
+            compute_spec = AppComputeSpecKubernetes(
+                requests=AppComputeSpecKubernetesResources(cpu=deployment_model.cpu_request,
+                                                           ram=deployment_model.ram_request),
+                limits=AppComputeSpecKubernetesResources(cpu=deployment_model.cpu_limit,
+                                                         ram=deployment_model.ram_limit))
+
+        # todo - add validation: limit without request will not work. need to raise exc
+
+        return compute_spec
 
     def _validate_namespace(self, namespace_obj, sandbox_id):
         if not namespace_obj:
@@ -179,7 +192,8 @@ class DeployOperation(object):
 
         try:
             self.networking_service.delete_internal_external_set(logger, clients, kubernetes_app_name, namespace)
-            self.deployment_service.delete_app(logger, clients, app_name_to_delete=kubernetes_app_name, namespace=namespace)
+            self.deployment_service.delete_app(logger, clients, app_name_to_delete=kubernetes_app_name,
+                                               namespace=namespace)
         except:
             logger.error('Failed to do rollback for app {} in ns/{}. Error:'
                          .format(cs_app_name, namespace, traceback.format_exc()))

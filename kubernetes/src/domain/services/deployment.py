@@ -130,16 +130,7 @@ class KubernetesDeploymentService:
             full_image_name = "{name}:{tag}".format(name=image.name, tag=image.tag)
 
         if compute_spec:
-            resources = {
-                "requests": {
-                    "cpu": compute_spec.requests.cpu,
-                    "memory": compute_spec.requests.ram
-                },
-                "limits": {
-                    "cpu": compute_spec.limits.cpu,
-                    "memory": compute_spec.limits.ram
-                }
-            }
+            resources = KubernetesDeploymentService._prepare_resource_request(compute_spec)
 
             return V1Container(name=name,
                                image=full_image_name,
@@ -155,6 +146,26 @@ class KubernetesDeploymentService:
                                args=args,
                                ports=container_ports,
                                env=env_list)
+
+    @staticmethod
+    def _prepare_resource_request(compute_spec):
+        resources = {}
+
+        if compute_spec.requests.cpu or compute_spec.requests.ram:
+            resources["requests"] = {}
+        if compute_spec.requests.cpu:
+            resources["requests"]["cpu"] = compute_spec.requests.cpu
+        if compute_spec.requests.ram:
+            resources["requests"]["memory"] = compute_spec.requests.ram
+
+        if compute_spec.limits.cpu or compute_spec.limits.ram:
+            resources["limits"] = {}
+        if compute_spec.limits.cpu:
+            resources["limits"]["cpu"] = compute_spec.limits.cpu
+        if compute_spec.limits.ram:
+            resources["limits"]["memory"] = compute_spec.limits.ram
+
+        return resources if resources else None
 
     def wait_until_all_replicas_ready(self, logger, clients, namespace, app_name, deployed_app_name,
                                       delay=10, timeout=120):
