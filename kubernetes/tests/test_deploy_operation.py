@@ -26,14 +26,18 @@ class TestDeployOperation(unittest.TestCase):
                                                     deployment_service=self.deployment_service,
                                                     vm_details_provider=self.vm_details_provider)
 
+    @patch('domain.operations.deploy.AppComputeSpecKubernetes')
     @patch('domain.operations.deploy.ApplicationImage')
     @patch('domain.operations.deploy.AppDeploymentRequest')
     def test_deploy_basic_flow(self, app_deployment_request_class,
-                               application_image_class):
+                               application_image_class, app_compute_spec_kubernetes_class):
         # arrange
         namespace_obj = Mock()
         namespace = namespace_obj.metadata.name
         self.namespace_service.get_single_by_id = Mock(return_value=namespace_obj)
+
+        compute_spec = Mock()
+        app_compute_spec_kubernetes_class.return_value = compute_spec
 
         vm_details_data_mock = Mock()
         self.vm_details_provider.create_vm_details = Mock(return_value=vm_details_data_mock)
@@ -48,7 +52,11 @@ class TestDeployOperation(unittest.TestCase):
             'Kubernetes.Kubernetes Service.Docker Image Tag': '16.04',
             'Kubernetes.Kubernetes Service.Start Command': 'do stuff',
             'Kubernetes.Kubernetes Service.Environment Variables': 'k1=v1',
-            'Kubernetes.Kubernetes Service.Wait for Replicas': '120'
+            'Kubernetes.Kubernetes Service.Wait for Replicas': '120',
+            'Kubernetes.Kubernetes Service.CPU Limit': '1',
+            'Kubernetes.Kubernetes Service.RAM Limit': '256M',
+            'Kubernetes.Kubernetes Service.CPU Request': '128M',
+            'Kubernetes.Kubernetes Service.RAM Request': '0.5'
         }
 
         internal_service_mock = Mock()
@@ -68,6 +76,8 @@ class TestDeployOperation(unittest.TestCase):
                                                       cancellation_context=self.cancellation_context)
 
         # assert
+        app_compute_spec_kubernetes_class.assert_called_once()
+
         self.networking_service.create_internal_external_set.assert_called_once_with(
             namespace=namespace,
             name=expected_kubernetes_app_name,
@@ -81,7 +91,7 @@ class TestDeployOperation(unittest.TestCase):
         app_deployment_request_class.assert_called_once_with(
             name=expected_kubernetes_app_name,
             image=application_image_class.return_value,
-            compute_spec=None,
+            compute_spec=app_compute_spec_kubernetes_class.return_value,
             internal_ports=[5589, 5560, 22],
             external_ports=[80, 443],
             replicas=3,
@@ -233,3 +243,26 @@ class TestDeployOperation(unittest.TestCase):
         self.networking_service.delete_internal_external_set.assert_called_once()
         self.deployment_service.delete_app.assert_not_called()
         self.logger.error.assert_called_once()
+
+    def test_get_compute_spec_returns_none_when_no_resource_specs(self):
+        # arrange
+        deployment_model = Mock(cpu_limit='', ram_limit='', cpu_request='', ram_request='')
+
+        # act
+        compute_spec = self.deployment_operation._get_compute_spec(deployment_model)
+
+        # assert
+        self.assertIsNone(compute_spec)
+
+    def test_get_compute_spec_returns_correct_spec_object(self):
+        # arrange
+        deployment_model = Mock(cpu_limit='1', ram_limit='128M', cpu_request='0.5', ram_request='64M')
+
+        # act
+        compute_spec = self.deployment_operation._get_compute_spec(deployment_model)
+
+        # assert
+        self.assertEquals(compute_spec.requests.cpu, '0.5')
+        self.assertEquals(compute_spec.requests.ram, '64M')
+        self.assertEquals(compute_spec.limits.cpu, '1')
+        self.assertEquals(compute_spec.limits.ram, '128M')
