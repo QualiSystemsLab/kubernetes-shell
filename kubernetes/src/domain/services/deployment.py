@@ -54,12 +54,13 @@ class KubernetesDeploymentService:
         :param AppDeploymentRequest app:
         :rtype: AppsV1beta1Deployment
         """
-
-        meta = V1ObjectMeta(name=name)
-
+        labels.update({TagsService.get_default_selector(name): name})
         annotations = {}
         # self.set_apps_info([name], annotations)
         # self.set_apps_debugging_protocols([app_request], annotations)
+
+        meta = V1ObjectMeta(name=name)
+
         template_meta = V1ObjectMeta(labels=labels, annotations=annotations)
 
         container = self._prepare_app_container(name=app.name,

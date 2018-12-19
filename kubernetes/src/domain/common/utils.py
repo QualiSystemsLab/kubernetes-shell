@@ -1,3 +1,5 @@
+import uuid
+
 from data_model import KubernetesService
 from cloudshell.cp.core.models import DeployApp
 
@@ -28,12 +30,22 @@ def create_deployment_model_from_action(deploy_app_action):
     raise ValueError('Unsupported deployment path')
 
 
-def convert_app_name_to_valide_kubernetes_name(app_name):
+def convert_app_name_to_valid_kubernetes_name(app_name):
     """
     :param str app_name:
     :rtype: str
     """
     return app_name.lower().replace(' ', '-').replace('_', '-')
+
+
+def generate_short_unique_string():
+    """
+    generate a short unique string.
+    method generate a guid and return the first 8 characteres of the new guid
+    :rtype: str
+    """
+    unique_id = str(uuid.uuid4())[:8]
+    return unique_id
 
 
 def get_custom_params_value(custom_params_list, key):

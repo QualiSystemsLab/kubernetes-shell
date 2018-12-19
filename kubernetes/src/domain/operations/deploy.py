@@ -5,7 +5,7 @@ from cloudshell.shell.core.driver_context import CancellationContext
 
 from domain.common.additional_data_keys import DeployedAppAdditionalDataKeys
 from domain.common.utils import convert_to_int_list, create_deployment_model_from_action, \
-    convert_app_name_to_valide_kubernetes_name
+    convert_app_name_to_valid_kubernetes_name, generate_short_unique_string
 from domain.services.tags import TagsService
 from model.clients import KubernetesClients
 import data_model
@@ -46,7 +46,8 @@ class DeployOperation(object):
         sandbox_tag = {TagsService.SANDBOX_ID: sandbox_id}
 
         deployment_model = create_deployment_model_from_action(deploy_action)
-        kubernetes_app_name = convert_app_name_to_valide_kubernetes_name(deploy_action.actionParams.appName)
+        kubernetes_app_name = convert_app_name_to_valid_kubernetes_name(deploy_action.actionParams.appName)
+        cloudshell_name = self._generate_cloudshell_deployed_app_name(kubernetes_app_name)
 
         namespace_obj = self.namespace_service.get_single_by_id(clients, sandbox_id)
         self._validate_namespace(namespace_obj, sandbox_id)
@@ -102,7 +103,7 @@ class DeployOperation(object):
             # prepare result
             return DeployAppResult(deploy_action.actionId,
                                    vmUuid=kubernetes_app_name,
-                                   vmName=deploy_action.actionParams.appName,
+                                   vmName=cloudshell_name,
                                    vmDetailsData=vm_details,
                                    deployedAppAdditionalData=additional_data,
                                    deployedAppAddress=kubernetes_app_name)  # todo - what address to use here?
@@ -114,6 +115,9 @@ class DeployOperation(object):
                                      kubernetes_app_name=kubernetes_app_name)
             # raise the original exception to log it properly
             raise
+
+    def _generate_cloudshell_deployed_app_name(self, kubernetes_app_name):
+        return "{}-{}".format(kubernetes_app_name, generate_short_unique_string())
 
     def _get_compute_spec(self, deployment_model):
         compute_spec = None

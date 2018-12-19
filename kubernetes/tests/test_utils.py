@@ -1,6 +1,6 @@
 import unittest
 
-from domain.common.utils import convert_to_int_list, convert_app_name_to_valide_kubernetes_name
+from domain.common.utils import convert_to_int_list, convert_app_name_to_valid_kubernetes_name
 
 
 class TestUtils(unittest.TestCase):
@@ -20,7 +20,7 @@ class TestUtils(unittest.TestCase):
         app_name = 'Kube Test'
 
         # act
-        result = convert_app_name_to_valide_kubernetes_name(app_name)
+        result = convert_app_name_to_valid_kubernetes_name(app_name)
 
         # assert
         self.assertEqual(result, 'kube-test')
