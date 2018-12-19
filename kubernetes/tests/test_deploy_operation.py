@@ -67,6 +67,9 @@ class TestDeployOperation(unittest.TestCase):
                                                                                   external_service_mock])
         expected_kubernetes_app_name = 'kube-app-test'
 
+        self.deployment_operation._generate_cloudshell_deployed_app_name = Mock(
+            return_value=self._get_expected_deployed_app_name(expected_kubernetes_app_name))
+
         # act
         result = self.deployment_operation.deploy_app(logger=self.logger,
                                                       sandbox_id=self.sandbox_id,
@@ -112,13 +115,16 @@ class TestDeployOperation(unittest.TestCase):
         self.assertTrue(result.success)
         self.assertEquals(result.actionId, self.deploy_action.actionId)
         self.assertEquals(result.vmUuid, expected_kubernetes_app_name)
-        self.assertEquals(result.vmName, self.deploy_action.actionParams.appName)
+        self.assertEquals(result.vmName, self._get_expected_deployed_app_name(expected_kubernetes_app_name))
         self.assertEquals(result.deployedAppAddress, expected_kubernetes_app_name)
         self.assertDictEqual(result.deployedAppAdditionalData,
                              {DeployedAppAdditionalDataKeys.NAMESPACE: namespace,
                               DeployedAppAdditionalDataKeys.REPLICAS: 3,
                               DeployedAppAdditionalDataKeys.WAIT_FOR_REPLICAS_TO_BE_READY: '120'})
         self.assertEquals(result.vmDetailsData, vm_details_data_mock)
+
+    def _get_expected_deployed_app_name(self, expected_kubernetes_app_name):
+        return "{}-{}".format(expected_kubernetes_app_name, 'some-short-guide')
 
     @patch('domain.operations.deploy.create_deployment_model_from_action')
     def test_deploy_raises_when_no_namespace(self, create_deployment_model_from_action):
@@ -185,11 +191,11 @@ class TestDeployOperation(unittest.TestCase):
         self.assertEquals(result, None)
 
     @patch('domain.operations.deploy.convert_to_int_list')
-    @patch('domain.operations.deploy.convert_app_name_to_valide_kubernetes_name')
+    @patch('domain.operations.deploy.convert_app_name_to_valid_kubernetes_name')
     @patch('domain.operations.deploy.create_deployment_model_from_action')
     def test_deploy_calls_rollback_when_create_app_in_deployment_service_raises(self,
                                                                                 create_deployment_model_from_action_method,
-                                                                                convert_app_name_to_valide_kubernetes_name_method,
+                                                                                convert_app_name_to_valid_kubernetes_name_method,
                                                                                 convert_to_int_list_method):
         # arrange
         self.networking_service.create_internal_external_set = Mock(return_value=MagicMock())
@@ -198,7 +204,7 @@ class TestDeployOperation(unittest.TestCase):
         namespace_obj_mock = Mock()
         self.namespace_service.get_single_by_id = Mock(return_value=namespace_obj_mock)
         kubernetes_name_mock = Mock()
-        convert_app_name_to_valide_kubernetes_name_method.return_value = kubernetes_name_mock
+        convert_app_name_to_valid_kubernetes_name_method.return_value = kubernetes_name_mock
 
         # act
         with self.assertRaisesRegexp(Exception, 'error in deployment'):
