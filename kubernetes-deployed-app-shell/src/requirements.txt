@@ -1,0 +1,2 @@
+cloudshell-shell-core>=4.0.0,<4.1.0
+cloudshell-automation-api>=9.0.0.0,<9.0.1.0

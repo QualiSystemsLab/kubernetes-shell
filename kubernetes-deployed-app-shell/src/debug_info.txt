@@ -1,0 +1,3 @@
+Debugging session started at: 23:14:36 12/20/18
+Python driver process is available for debugging at PID #13544
+Virtual environment is located at `C:\ProgramData\QualiSystems\venv\KubernetesDeployedApp_2_11\Scripts`

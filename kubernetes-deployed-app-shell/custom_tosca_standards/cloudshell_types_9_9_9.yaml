@@ -1,0 +1,702 @@
+
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+metadata:
+  template_name: CloudShell families
+  template_author: Quali
+  template_version: 1.2.0
+
+description: Suitable for modeling network devices, Supports both L2 (Switch) and L3 (Router)
+
+
+capability_types:
+
+# ----------------- CLOUDSHELL Families  -----------------#
+
+  cloudshell.families.CS_VirtualTrafficGeneratorChassis:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Vendor, Version, Model Name, License Server]
+      connectable:
+        type: boolean
+        default: false
+      default_share_level:
+        type: string
+        default: shared
+      allow_remote_connection:
+        type: boolean
+        default: true
+      family_type:
+        type: string
+        default: Application
+
+  cloudshell.families.CS_VirtualTrafficGeneratorModule:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Model Name, Supported Controller]
+      connectable:
+        type: boolean
+        default: false
+      allow_remote_connection:
+        type: boolean
+        default: false
+      family_type:
+        type: string
+        default: Application
+
+  cloudshell.families.CS_VirtualTrafficGeneratorPort:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Max Speed, Logical Name, MAC Address, Requested vNIC Name]
+      connectable:
+        type: boolean
+        default: true
+      default_share_level:
+        type: string
+        default: exclusive
+      allow_remote_connection:
+        type: boolean
+        default: false
+
+  cloudshell.families.CS_TrafficGeneratorChassis:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Vendor, Version, Model Name]
+      connectable:
+        type: boolean
+        default: false
+      default_share_level:
+        type: string
+        default: shared
+      allow_remote_connection:
+        type: boolean
+        default: true
+
+  cloudshell.families.CS_TrafficGeneratorModule:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Model Name , Supported Controller]
+      connectable:
+        type: boolean
+        default: false
+      allow_remote_connection:
+        type: boolean
+        default: false
+
+  cloudshell.families.CS_TrafficGeneratorPortGroup:
+    derived_from: cloudshell.families.Root
+
+  cloudshell.families.CS_TrafficGeneratorPort:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Max Speed, Configured Controllers, Logical Name]
+      connectable:
+        type: boolean
+        default: true
+      default_share_level:
+        type: string
+        default: exclusive
+      allow_remote_connection:
+        type: boolean
+        default: false
+
+  cloudshell.families.CS_SDNController:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [ Model Name ]
+      connectable:
+        type: boolean
+        default: false
+      default_share_level:
+        type: string
+        default: shared
+      allow_remote_connection:
+        type: boolean
+        default: true
+
+  cloudshell.families.CS_SoftwareAsset:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Vendor, Model, Version, Location, Contact Name]
+      connectable:
+        type: boolean
+        default: false
+      default_share_level:
+        type: string
+        default: shared
+      family_type:
+        type: string
+        default: Application
+      allow_remote_connection:
+        type: boolean
+        default: true
+
+  cloudshell.families.CS_SoftwareServiceGroup:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Vendor, Model, Version, Service Group Name]
+      connectable:
+        type: boolean
+        default: false
+      default_share_level:
+        type: string
+        default: shared
+      family_type:
+        type: string
+        default: Application
+      allow_remote_connection:
+        type: boolean
+        default: false
+
+  cloudshell.families.CS_SoftwareService:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Vendor, Model, Version, Location, Contact Name]
+      connectable:
+        type: boolean
+        default: false
+      default_share_level:
+        type: string
+        default: shared
+      family_type:
+        type: string
+        default: Application
+      allow_remote_connection:
+        type: boolean
+        default: true
+
+  cloudshell.families.CS_GenericResource:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Vendor, Model, Location, System Name, Contact Name, Model Name]
+      connectable:
+        type: boolean
+        default: false
+      default_share_level:
+        type: string
+        default: exclusive
+      allow_remote_connection:
+        type: boolean
+        default: true
+
+  cloudshell.families.CS_Switch:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Vendor, Model, Location, System Name, OS Version, Contact Name, Model Name]
+      connectable:
+        type: boolean
+        default: false
+      allow_remote_connection:
+        type: boolean
+        default: true
+
+  cloudshell.families.CS_SDNSwitch:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Model Name]
+      connectable:
+        type: boolean
+        default: false
+      allow_remote_connection:
+        type: boolean
+        default: true
+
+  cloudshell.families.CS_Router:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Vendor, Model, Location, System Name, OS Version, Contact Name, Model Name]
+      connectable:
+        type: boolean
+        default: false
+      allow_remote_connection:
+        type: boolean
+        default: true
+
+  cloudshell.families.CS_WirelessController:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Vendor, Model, Location, System Name, OS Version, Contact Name, Model Name]
+      connectable:
+        type: boolean
+        default: false
+      allow_remote_connection:
+        type: boolean
+        default: true
+
+  cloudshell.families.CS_Firewall:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Vendor, Model, Location, System Name, OS Version, Contact Name, Model Name]
+      connectable:
+        type: boolean
+        default: false
+      allow_remote_connection:
+        type: boolean
+        default: true
+
+  cloudshell.families.CS_Chassis:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Model Name]
+      connectable:
+        type: boolean
+        default: false
+      allow_remote_connection:
+        type: boolean
+        default: false
+
+  cloudshell.families.CS_Module:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Model Name]
+      connectable:
+        type: boolean
+        default: false
+      allow_remote_connection:
+        type: boolean
+        default: false
+
+  cloudshell.families.CS_SubModule:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Model Name]
+      connectable:
+        type: boolean
+        default: false
+      allow_remote_connection:
+        type: boolean
+        default: false
+
+  cloudshell.families.CS_Port:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Model Name]
+      connectable:
+        type: boolean
+        default: true
+      default_share_level:
+        type: string
+        default: exclusive
+      allow_remote_connection:
+        type: boolean
+        default: false
+        
+  cloudshell.families.CS_Container:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Model Name]
+      connectable:
+        type: boolean
+        default: false
+      default_share_level:
+        type: string
+        default: exclusive
+      allow_remote_connection:
+        type: boolean
+        default: true
+
+  cloudshell.families.CS_PortChannel:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Model Name]
+      connectable:
+        type: boolean
+        default: true
+      default_share_level:
+        type: string
+        default: exclusive
+      allow_remote_connection:
+        type: boolean
+        default: false
+
+  cloudshell.families.CS_PowerPort:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Model Name]
+      connectable:
+        type: boolean
+        default: true
+      default_share_level:
+        type: string
+        default: exclusive
+      allow_remote_connection:
+        type: boolean
+        default: false
+
+  cloudshell.families.CS_ComputeServer:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Vendor, Model, Location, Model Name]
+      connectable:
+        type: boolean
+        default: false
+      allow_remote_connection:
+        type: boolean
+        default: true
+
+  cloudshell.families.CS_GenericAppFamily:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      connectable:
+        type: boolean
+        default: false
+      default_share_level:
+        type: string
+        default: exclusive
+      family_type:
+        type: string
+        default: Application
+      allow_remote_connection:
+        type: boolean
+        default: true
+        
+  cloudshell.families.CS_ComplexAppFamily:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      connectable:
+        type: boolean
+        default: false
+      default_share_level:
+        type: string
+        default: exclusive
+      family_type:
+        type: string
+        default: Application
+      allow_remote_connection:
+        type: boolean
+        default: false
+
+  cloudshell.families.CS_PDU:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Vendor, Model, Location, System Name, OS Version, Model Name]
+      is_power_switch:
+        type: boolean
+        default: true
+      allow_remote_connection:
+        type: boolean
+        default: true
+
+  cloudshell.families.CS_PowerSocket:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Model Name]
+      connectable:
+        type: boolean
+        default: true
+      default_share_level:
+        type: string
+        default: exclusive
+      allow_remote_connection:
+        type: boolean
+        default: false
+
+  cloudshell.families.CS_BroadbandMediaChassis:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [Vendor, Model, Location, System Name, OS Version, Contact Name, Model Name]
+      connectable:
+        type: boolean
+        default: false
+      default_share_level:
+        type: string
+        default: shared
+      allow_remote_connection:
+        type: boolean
+        default: false
+
+  cloudshell.families.CS_WiFiCard:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: [WiFi Protocol, Frequency]
+      connectable:
+        type: boolean
+        default: true
+      default_share_level:
+        type: string
+        default: shared
+      allow_remote_connection:
+        type: boolean
+        default: false
+
+  cloudshell.families.CS_CloudProvider:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      connectable:
+        type: boolean
+        default: false
+      searchable:
+        type: boolean
+        default: false
+      default_share_level:
+        type: string
+        default: shared
+      allow_remote_connection:
+        type: boolean
+        default: false
+        
+  cloudshell.families.CS_CloudService:
+    derived_from: cloudshell.families.ServiceRoot
+    properties:
+      description:
+        type: string
+        default: This is a default description for a service family
+
+  cloudshell.families.CS_CustomService:
+    derived_from: cloudshell.families.ServiceRoot
+    properties:
+      description:
+        type: string
+        default: This is a default description for a service family
+
+  cloudshell.families.CS_ServerFarm:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: []
+      connectable:
+        type: boolean
+        default: false
+      allow_remote_connection:
+        type: boolean
+        default: false
+
+  cloudshell.families.CS_RealServer:
+    derived_from: cloudshell.families.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      attribute_list:
+        type: list
+        default: []
+      connectable:
+        type: boolean
+        default: false
+      allow_remote_connection:
+        type: boolean
+        default: false
+
+  cloudshell.families.CS_TrafficGeneratorController:
+    derived_from: cloudshell.families.ServiceRoot
+    properties:
+      description:
+        type: string
+        default: This is a default description for a service family
+        
+  cloudshell.families.CS_DeploymentOptions:
+    derived_from: cloudshell.families.ServiceRoot
+    properties:
+      description:
+        type: string
+        default: This is a default description for a service family
+      service_type:
+        type: string
+        default: Deployment
+
+# ----------------- ------------------------ -----------------#
+
+  cloudshell.families.Root:
+    derived_from: tosca.capabilities.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a family
+      searchable:
+        type: boolean
+        default: true
+      default_share_level:
+        type: string
+        default: shared
+        constraints:
+          - valid_values: [exclusive,shared]
+      permissions:
+        type: string
+        default: all
+        constraints:
+          - valid_values: [admin_only,all]
+      connectable:
+        type: boolean
+        default: true
+      attribute_list:
+        type: list
+        default: []
+      family_type:
+        type: string
+        default: Resource
+
+  cloudshell.families.ServiceRoot:
+    derived_from: tosca.capabilities.Root
+    properties:
+      description:
+        type: string
+        default: This is a default description for a service family
+      permissions:
+        type: string
+        default: all
+        constraints:
+          - valid_values: [admin_only,all]
+      attribute_list:
+        type: list
+        default: []
+      is_service:
+        type: boolean
+        default: true
+      service_type:
+        type: string
+        default: Regular
+        constraints:
+          - valid_values: [Regular, Deployment, Orchestration]

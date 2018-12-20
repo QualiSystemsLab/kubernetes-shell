@@ -1,0 +1,55 @@
+# CloudShell Deployed App Standard
+
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+description: Suitable for modeling complex deployed apps
+
+metadata:
+  template_name: Complex Deployed App
+  template_author: Quali
+  template_version: 1.0.3
+
+imports:
+  - cloudshell_standard: cloudshell_resource_standard_9_9_9.yaml
+  - cloudshell_types: cloudshell_types_9_9_9.yaml
+
+node_types:
+
+# ----------------- CLOUDSHELL NODES -----------------#
+  cloudshell.nodes.ComplexDeployedApp:
+    derived_from:  cloudshell.apps.ComplexGenericDeployedApp
+    capabilities:
+      cloudshell_family:
+        type: cloudshell.families.CS_ComplexAppFamily
+# ----------------- ------------------ -----------------#
+
+  cloudshell.apps.ComplexGenericDeployedApp:
+    properties:
+      User:
+        description: User with administrative privileges
+        type: string
+      Password:
+        type: cloudshell.datatypes.Password
+      Public IP:
+        type: string
+    requirements:
+      - ports:
+          capability: tosca.capabilities.Attachment
+          node: cloudshell.apps.Container
+          relationship: tosca.relationships.AttachesTo
+          occurrences: [0, UNBOUNDED]
+ 
+  cloudshell.apps.Container:
+    properties:
+      User:
+        description: User with administrative privileges
+        type: string
+      Password:
+        type: cloudshell.datatypes.Password
+      IP Address:
+        type: string
+      Model Name:
+        type: string
+    capabilities:
+      cloudshell_family:
+        type: cloudshell.families.CS_Container

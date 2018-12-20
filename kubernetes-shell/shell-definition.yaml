@@ -1,0 +1,96 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+metadata:
+  template_name: Kubernetes
+  template_author: Alex Azarh
+  template_version: 0.1.0
+  template_icon: shell-icon.png
+
+description: >
+ Sample TOSCA based shell
+
+imports:
+  - cloudshell_standard: cloudshell_cloud_provider_standard_1_0_0.yaml
+
+node_types:
+ vendor.resource.Kubernetes:
+    derived_from: cloudshell.nodes.CustomCloudProvider
+    capabilities:
+    
+      concurrent_command_capability:
+        type: cloudshell.capabilities.SupportConcurrentCommands
+        
+      auto_discovery_capability:
+        type: cloudshell.capabilities.AutoDiscovery
+        properties:        
+          enable_auto_discovery:
+            type: boolean
+            default: true
+          auto_discovery_description:
+            type: string
+            default: Describe the auto discovery
+          inventory_description:
+            type: string
+            default: Describe the resource shell template
+          hide_address:
+            type: string
+            default: true
+
+          Config File Path:
+            type: string
+
+          External Service Type:
+            type: string
+            default: LoadBalancer
+
+#          ## Attributes available from the cloud provider standard
+#          Region:
+#            type: string
+#            default: ''
+#          Networks in use:
+#            type: string
+#            default: ''
+#          VLAN Type:
+#            type: string
+#            default: 'VLAN'
+#          Networking type:
+#            type: string
+#            default: 'L2'
+#
+#          ## Adding custom attributes to the cloud provider discovery form
+#          my_custom_attribute:
+#            type: string
+#            default:
+
+#    ## Custom attributes definition
+#    properties:
+#      my_custom_attribute:
+#        type: string
+#        default:
+#        description: attribute description
+
+    properties:
+      Config File Path:
+        type: string
+        default:
+        description: Path to a standalone kubernetes config file containing all the relevant information for authentication. To get a portable config file run command 'kubectl config view --flatten'
+
+      External Service Type:
+        type: string
+        default: LoadBalancer
+        description: The service type the shell will create for external services. LoadBalander type should be used when the Kuberentes cluster is hosted on a supported public cloud provider like GCP, AWS or Azure. Use NodePort when the cluster is self hosted.
+        constraints:
+          - valid_values: [LoadBalancer, NodePort]
+
+    artifacts:
+      icon:
+        file: shell-icon.png
+        type: tosca.artifacts.File
+      driver:
+        file: KubernetesDriver.zip
+        type: tosca.artifacts.File
+      deployment:
+        file: Deployments.zip
+        type: tosca.artifacts.File
+
+
